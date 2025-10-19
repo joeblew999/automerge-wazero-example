@@ -161,11 +161,21 @@ Automerge documents are JSON-like:
 
 ### Phase 0: Fix Data Model (BLOCKING!)
 - [ ] **Replace string-based text with Automerge.Text type**
-  - [ ] Update Rust lib.rs to use `ObjType::Text` instead of string value
-  - [ ] Add `am_text_insert(pos, char)` and `am_text_delete(pos, len)` exports
-  - [ ] Update `am_get_text()` to read from Text object (not plain string)
+  - [ ] Update Rust lib.rs: `doc.put_object(ROOT, "text", ObjType::Text)` (returns ObjId)
+  - [ ] Store text ObjId in thread-local state (needed for all text operations)
+  - [ ] Replace `am_set_text()` with `am_text_splice(pos, del_count, insert_str, len)`
+  - [ ] Update `am_get_text()` to read from Text object using stored ObjId
+  - [ ] Add helper: `am_text_len()` to get current text length
+- [ ] **Update Go server to call am_text_splice instead of am_set_text**
+  - [ ] Parse incoming text changes to determine pos, delete, insert
+  - [ ] Or: Use `updateText` pattern (diff old vs new, generate splices)
 - [ ] **Test character-level operations work correctly**
-- [ ] **Verify text properly stored in Text CRDT, not as string**
+  - [ ] Insert at position 0, middle, end
+  - [ ] Delete characters
+  - [ ] Verify Text CRDT properties (not plain string in doc.save())
+- [ ] **Verify merge works with concurrent text edits**
+  - [ ] Create two docs, both edit text, merge them
+  - [ ] Should NOT lose either edit (list merge rules)
 
 ### Phase 1: Document Current State
 - [ ] Add section to README explaining this is a simplified demo
@@ -174,19 +184,47 @@ Automerge documents are JSON-like:
 
 ### Phase 2: Implement Automerge Sync Protocol (M1)
 
+**CRITICAL UNDERSTANDING:** Sync is **per-peer**, not per-document!
+- Multiple clients can sync THE SAME document
+- Each peer needs its own SyncState for every other peer
+- Server tracks: `map[peerId]map[documentId]*SyncState`
+
 #### Rust WASI Module
-- [ ] Add `am_sync_init_peer(peer_id, len) -> i32`
-- [ ] Add `am_sync_gen_len() -> u32`
-- [ ] Add `am_sync_gen(ptr_out) -> i32` - Generate sync message (delta)
-- [ ] Add `am_sync_recv(ptr, len) -> i32` - Receive and apply sync message
-- [ ] Support multiple Automerge document instances (not just one global)
+- [ ] **Sync State Management**
+  - [ ] Add `am_sync_state_new(peer_id_ptr, len) -> u32` - Create sync state for peer
+  - [ ] Store sync states: `map[peer_id]*SyncState`
+- [ ] **Generate Sync Messages**
+  - [ ] Add `am_sync_gen(peer_id_ptr, len) -> i32` - Generate message for specific peer
+  - [ ] Add `am_sync_gen_len() -> u32` - Get message length
+  - [ ] Add `am_sync_gen_read(ptr_out) -> i32` - Read generated message
+- [ ] **Receive Sync Messages**
+  - [ ] Add `am_sync_recv(peer_id_ptr, id_len, msg_ptr, msg_len) -> i32`
+  - [ ] Apply changes from peer's sync message
+  - [ ] May trigger need to generate response message
+- [ ] **Storage Operations (See AGENT_AUTOMERGE.md Storage Model)**
+  - [ ] Implement storage key format: `[docId, type, identifier]`
+  - [ ] Save incremental changes: `[docId, "incremental", hash]`
+  - [ ] Save snapshots: `[docId, "snapshot", heads]`
+  - [ ] Add `am_compact()` - Compact incremental changes to snapshot
 
 #### Go Server
-- [ ] Replace single shared doc with per-client document map
-- [ ] Add `/api/sync` SSE endpoint for Automerge sync messages
-- [ ] On local edit: call `am_sync_gen` and broadcast delta (not full text)
-- [ ] On receive: call `am_sync_recv` then maybe `am_sync_gen` (Automerge may request reply)
-- [ ] Store per-client `doc.am` snapshots in `data/<clientId>.am`
+- [ ] **Per-Peer Sync State Management**
+  - [ ] Create `SyncManager` with `map[peerId]map[docId]*SyncState`
+  - [ ] Assign unique peer ID to each connected client (UUID)
+  - [ ] Initialize sync state when client connects to a document
+- [ ] **Replace HTTP Text API with Sync Protocol**
+  - [ ] Change POST /api/text to POST /api/sync (binary sync messages)
+  - [ ] SSE /api/stream sends sync messages (not JSON text updates)
+  - [ ] On client edit: receive sync message, apply via `am_sync_recv`, generate responses
+- [ ] **Storage Backend**
+  - [ ] Implement storage adapter (filesystem or in-memory for now)
+  - [ ] Store with key format: `data/[docId]/[type]/[identifier].am`
+  - [ ] Load all chunks on startup: `loadRange([docId])`
+  - [ ] Periodic compaction (combine incrementals → snapshot)
+- [ ] **Document Sharing Architecture**
+  - [ ] Single document can have multiple clients syncing
+  - [ ] Each client has own sync state with server
+  - [ ] Server maintains one doc.am, syncs with all clients
 
 #### UI
 - [ ] Replace POST /api/text with Automerge sync message exchange
@@ -199,28 +237,93 @@ Automerge documents are JSON-like:
 - [ ] Add `am_select(doc_id)` / `am_new_doc(doc_id)` to Rust
 - [ ] Store snapshots per document: `data/<docId>.am`
 
-### Phase 4: Real-Time Collaborative Editing Features
-- [ ] **Multiple Cursors/Carets** - Show where each user is typing
-  - [ ] Track cursor position for each connected user
-  - [ ] Assign unique color to each user
-  - [ ] Display remote cursors in textarea with user name/color
-- [ ] **User Presence** - Who's online
-  - [ ] Show list of connected users
-  - [ ] Display user status (typing, idle, offline)
-  - [ ] Show user avatars or initials with their color
-- [ ] **Real-Time Character-by-Character Updates**
-  - [ ] Sync on every keystroke (not just Save button)
-  - [ ] Use Automerge operational transforms for fine-grained edits
-  - [ ] Show typing indicators ("User X is typing...")
-- [ ] **Remove "Save" button** - everything auto-syncs
-- [ ] **Conflict visualization** - Highlight conflicting edits being merged
+### Phase 4: User Presence & Identity
+**Feature:** Know who's connected and identify users
 
-### Phase 5: NATS Transport (M3)
+- [ ] **User Identity System**
+  - [ ] Add user registration/login (or anonymous with persistent ID)
+  - [ ] Assign unique user ID + display name
+  - [ ] Store user preferences (color, avatar)
+- [ ] **Presence Tracking**
+  - [ ] Track connected users per document
+  - [ ] Detect user joins/leaves (WebSocket connect/disconnect)
+  - [ ] Broadcast presence updates via SSE
+- [ ] **UI: User List**
+  - [ ] Show list of connected users in sidebar
+  - [ ] Display user color/avatar/name
+  - [ ] Show online/offline status
+
+### Phase 5: Cursor Position Sharing
+**Feature:** See where others are editing
+
+- [ ] **Cursor Position Protocol**
+  - [ ] Add cursor position message type (separate from sync)
+  - [ ] Send cursor position on selection change
+  - [ ] Throttle cursor updates (max 10/sec to reduce bandwidth)
+- [ ] **Ephemeral Data Channel**
+  - [ ] Cursor positions are NOT stored in doc.am (ephemeral!)
+  - [ ] Use separate SSE channel or message type
+  - [ ] Clear cursor when user disconnects
+- [ ] **UI: Remote Cursors**
+  - [ ] Display remote cursor positions in textarea
+  - [ ] Color-code cursors by user
+  - [ ] Show user name tooltip on hover
+
+### Phase 6: Real-Time Keystroke Sync
+**Feature:** Instant character-by-character updates
+
+- [ ] **Remove Save Button**
+  - [ ] Sync on every keystroke (oninput event)
+  - [ ] Use `am_text_splice` for character-level edits
+  - [ ] Throttle/debounce if needed (but prefer immediate)
+- [ ] **Typing Indicators**
+  - [ ] Broadcast "typing" status when user types
+  - [ ] Show "User X is typing..." indicator
+  - [ ] Clear indicator after 2 seconds of inactivity
+- [ ] **Optimistic UI Updates**
+  - [ ] Apply local edits immediately (don't wait for server)
+  - [ ] Update cursor positions after remote edits
+  - [ ] Handle cursor position adjustments (insertions shift positions)
+
+### Phase 7: Conflict Detection & Visualization
+**Feature:** Show when concurrent edits conflict
+
+- [ ] **Detect Conflicts**
+  - [ ] Use `Automerge.getConflicts()` to detect concurrent property updates
+  - [ ] Track which edits came from which user
+  - [ ] Identify overlapping edit regions
+- [ ] **Conflict UI**
+  - [ ] Highlight text regions with conflicts
+  - [ ] Show tooltip: "Alice and Bob both edited here"
+  - [ ] Indicate which value "won" (LWW based on operation ID)
+  - [ ] Option to view/accept alternate values
+
+### Phase 8: Offline Support
+**Feature:** Work without network, sync when reconnected
+
+- [ ] **Browser-Side Persistence**
+  - [ ] Store doc.am in IndexedDB (see AGENT_AUTOMERGE.md Storage Model)
+  - [ ] Save incremental changes locally while offline
+  - [ ] Load from IndexedDB on page reload
+- [ ] **Reconnection Logic**
+  - [ ] Detect network disconnect/reconnect
+  - [ ] Queue sync messages while offline
+  - [ ] Resume sync when connection restored
+  - [ ] Show offline indicator in UI
+- [ ] **Merge on Reconnect**
+  - [ ] Send accumulated local changes as sync messages
+  - [ ] Receive remote changes made while offline
+  - [ ] CRDT merge handles everything automatically!
+
+### Phase 9: NATS Transport (M3)
+**Feature:** Replace HTTP with scalable pub/sub
+
 - [ ] Replace HTTP SSE with NATS subjects: `automerge.sync.<tenant>.<docId>`
 - [ ] Store snapshots in NATS Object Store
 - [ ] Add RBAC via JWT
+- [ ] Support multi-tenancy
 
-### Phase 6: Testing
+### Phase 10: Testing & Performance
 - [ ] Test with two separate processes (simulating two laptops)
 - [ ] Verify offline edits merge correctly when reconnected
 - [ ] Test conflict resolution (both edit same line)
