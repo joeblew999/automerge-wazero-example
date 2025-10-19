@@ -10,6 +10,8 @@ This document instructs automation agents (and humans) how to build, run, extend
 
 **Repository**: `joeblew999/automerge-wazero-example`
 
+https://github.com/joeblew999/automerge-wazero-example
+
 YOU MUST USE FILE PATH for code: /Users/apple/workspace/go/src/github.com/joeblew999/automerge-wazero-example
 
 **stack**:
