@@ -482,12 +482,16 @@ pub extern "C" fn am_sync_recv(ptr: *const u8, len: u32) -> i32
 
 ## References
 
-### Local Documentation
-- [.src/automerge-docs/text.md](.src/automerge-docs/text.md) - Text CRDT API
-- [.src/automerge-docs/modeling-data.md](.src/automerge-docs/modeling-data.md) - Data modeling guide
+### Local Documentation (Cloned Repo)
+- **Full docs repo:** `.src/automerge.github.io/` (git clone of official docs)
+- **Text CRDT:** `.src/automerge.github.io/content/docs/reference/documents/text.md`
+- **Modeling Data:** `.src/automerge.github.io/content/docs/cookbook/modeling-data.md`
+- **Document Model:** `.src/automerge.github.io/content/docs/reference/documents/index.md`
+- **Concepts:** `.src/automerge.github.io/content/docs/reference/concepts.md`
+- **All docs:** Browse `.src/automerge.github.io/content/docs/` for complete documentation tree
 
 ### Official Documentation
-- **GitHub Repo:** https://github.com/automerge/automerge.github.io
+- **GitHub Repo:** https://github.com/automerge/automerge.github.io (cloned to `.src/`)
 - **Text Documentation:** https://automerge.org/docs/reference/documents/text/
 - **Modeling Data:** https://automerge.org/docs/cookbook/modeling-data/
 - **Document Model:** https://automerge.org/docs/reference/documents/
