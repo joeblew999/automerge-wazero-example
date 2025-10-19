@@ -75,12 +75,28 @@ Browser Tab A    Browser Tab B
 - [ ] Add `am_select(doc_id)` / `am_new_doc(doc_id)` to Rust
 - [ ] Store snapshots per document: `data/<docId>.am`
 
-### Phase 4: NATS Transport (M3)
+### Phase 4: Real-Time Collaborative Editing Features
+- [ ] **Multiple Cursors/Carets** - Show where each user is typing
+  - [ ] Track cursor position for each connected user
+  - [ ] Assign unique color to each user
+  - [ ] Display remote cursors in textarea with user name/color
+- [ ] **User Presence** - Who's online
+  - [ ] Show list of connected users
+  - [ ] Display user status (typing, idle, offline)
+  - [ ] Show user avatars or initials with their color
+- [ ] **Real-Time Character-by-Character Updates**
+  - [ ] Sync on every keystroke (not just Save button)
+  - [ ] Use Automerge operational transforms for fine-grained edits
+  - [ ] Show typing indicators ("User X is typing...")
+- [ ] **Remove "Save" button** - everything auto-syncs
+- [ ] **Conflict visualization** - Highlight conflicting edits being merged
+
+### Phase 5: NATS Transport (M3)
 - [ ] Replace HTTP SSE with NATS subjects: `automerge.sync.<tenant>.<docId>`
 - [ ] Store snapshots in NATS Object Store
 - [ ] Add RBAC via JWT
 
-### Phase 5: Testing
+### Phase 6: Testing
 - [ ] Test with two separate processes (simulating two laptops)
 - [ ] Verify offline edits merge correctly when reconnected
 - [ ] Test conflict resolution (both edit same line)
