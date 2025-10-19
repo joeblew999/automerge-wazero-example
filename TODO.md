@@ -19,6 +19,83 @@
 - NOT using Automerge's sync protocol (deltas)
 - Each "laptop" should have its own `doc.am` and sync changes
 
+## What is a `doc.am` file?
+
+**`doc.am` is a binary snapshot file** that contains the entire state and history of an Automerge CRDT document.
+
+### Key Concepts:
+
+**1. Not Just Current State**
+- It doesn't just store "Hello World" (the current text)
+- It stores **every single edit** that was ever made to the document
+- Example: "H" added, then "e", then "llo", then someone deleted "l", etc.
+
+**2. Binary Format**
+- The `.am` extension stands for "**Automerge**"
+- It's a compact binary format (not human-readable text)
+- Contains the full operation history compressed efficiently
+
+**3. CRDT Magic - Conflict-Free Merging**
+
+When you have two different `doc.am` files that diverged:
+```
+Laptop A's doc.am: "Hello World" (edited offline)
+Laptop B's doc.am: "Hello Everyone" (edited offline)
+```
+
+Automerge can **merge them without conflicts** because each file contains:
+- Which character was inserted when
+- Who inserted it (which replica/user)
+- The causal order of all operations
+
+**4. Inside a `doc.am` file (simplified):**
+```
+[Header]
+ActorID: user-123
+Operations: [
+  { op: "insert", pos: 0, char: "H", timestamp: 1000, actor: user-123 }
+  { op: "insert", pos: 1, char: "e", timestamp: 1001, actor: user-123 }
+  { op: "insert", pos: 2, char: "l", timestamp: 1050, actor: user-456 }
+  { op: "delete", pos: 2, timestamp: 1100, actor: user-123 }
+  ...
+]
+```
+
+### Current Demo vs. Real Automerge
+
+**What the current demo does WRONG:**
+```
+Server has: doc.am (ONE shared file)
+Client 1 → POST "Hello World" → overwrites doc.am
+Client 2 → POST "Hello Everyone" → overwrites doc.am  ❌ LOST DATA!
+```
+
+**What real Automerge should do:**
+```
+Laptop A has: doc_A.am (Alice's personal copy)
+Laptop B has: doc_B.am (Bob's personal copy)
+Server has: doc_server.am (server's copy)
+
+Alice edits offline → doc_A.am grows with new operations
+Bob edits offline → doc_B.am grows with new operations
+
+When they connect:
+- Alice syncs → Server merges doc_A.am + doc_server.am = new doc_server.am
+- Bob syncs → Server merges doc_B.am + doc_server.am = final doc_server.am
+- Both get the merged result ✅ NO DATA LOSS!
+```
+
+### Why Sync Deltas (Not Full Files)?
+
+Sending entire `doc.am` files every edit would be:
+- ❌ Huge bandwidth (file grows with every edit ever made)
+- ❌ Slow performance
+
+Instead, Automerge syncs **deltas** (just new operations):
+- ✅ "I added 5 characters at position 10"
+- ✅ Minimal bandwidth
+- ✅ Fast real-time sync
+
 ## What Automerge SHOULD Do
 
 ### Real Architecture:
@@ -41,7 +118,54 @@ Browser Tab A    Browser Tab B
           ONE doc.am
 ```
 
+## Proper Data Modeling (Critical!)
+
+### Current Demo Uses Wrong Automerge API
+
+**Current (WRONG) approach:**
+```rust
+// lib.rs - Using string replacement
+doc.put(&automerge::ROOT, "text", "whole string value")  // ❌
+```
+
+**Should use Automerge.Text type:**
+```rust
+// Create a Text object for collaborative editing
+let text_id = doc.put_object(&automerge::ROOT, "text", ObjType::Text)?;
+// Then insert/delete individual characters
+doc.splice_text(&text_id, 0, 0, "Hello")?;
+```
+
+### Why This Matters
+
+- **Text type**: Character-level CRDT that merges concurrent edits properly
+- **String replacement**: Just overwrites, NO conflict resolution
+- Without `Automerge.Text`, we're not using Automerge's core functionality!
+
+### Document Structure
+
+Automerge documents are JSON-like:
+```json
+{
+  "text": <Automerge.Text object>,  // NOT a plain string!
+  "metadata": {
+    "title": "My Document",         // Immutable strings OK here
+    "lastModified": 1234567890
+  }
+}
+```
+
+**Reference:** https://automerge.org/docs/cookbook/modeling-data/
+
 ## TODO List
+
+### Phase 0: Fix Data Model (BLOCKING!)
+- [ ] **Replace string-based text with Automerge.Text type**
+  - [ ] Update Rust lib.rs to use `ObjType::Text` instead of string value
+  - [ ] Add `am_text_insert(pos, char)` and `am_text_delete(pos, len)` exports
+  - [ ] Update `am_get_text()` to read from Text object (not plain string)
+- [ ] **Test character-level operations work correctly**
+- [ ] **Verify text properly stored in Text CRDT, not as string**
 
 ### Phase 1: Document Current State
 - [ ] Add section to README explaining this is a simplified demo
