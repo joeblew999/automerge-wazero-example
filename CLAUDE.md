@@ -10,7 +10,7 @@ This document instructs automation agents (and humans) how to build, run, extend
 
 **Repository**: `joeblew999/automerge-wazero-example`
 
-FILE PATH: /Users/apple/workspace/go/src/github.com/joeblew999/automerge-wazero-example
+YOU MUST USE FILE PATH for code: /Users/apple/workspace/go/src/github.com/joeblew999/automerge-wazero-example
 
 **stack**:
 
@@ -32,7 +32,9 @@ https://data-star.dev
 
 **TESTING**
 
-Use your playwright MCP to Test that it works from the outside. 
+you MUST use your playwright MCP to Test that it works from the outside. 
+
+you MUST keep the makefile and README.md up to date.
 
 **Branches**:
 
