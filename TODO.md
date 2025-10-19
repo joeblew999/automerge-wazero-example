@@ -7,8 +7,10 @@
 - Go server with wazero hosts WASM
 - SSE broadcasts text changes to all tabs
 - Single shared `doc.am` on server
+- **Automerge.js loaded via CDN** in browser (ready for Phase 0/2!)
 
 ❌ **NOT Implemented:** True Automerge sync protocol
+❌ **NOT Using:** Automerge.Text type (still using plain strings)
 
 ## The Problem
 
