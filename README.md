@@ -1,0 +1,1 @@
+# automerge-wazero-example
