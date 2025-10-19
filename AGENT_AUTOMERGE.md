@@ -392,6 +392,305 @@ sendToServer(syncMessage)
 
 ---
 
+## Merge Rules - How Automerge Resolves Conflicts
+
+### Understanding Concurrent Changes
+
+Two concurrent versions of a document = changes since common ancestor:
+```
+A → B → C → D → E
+        ↓
+        F → G
+```
+Common ancestor: C
+Concurrent changes: (D, E) and (F, G)
+
+### Map Merge Rules
+
+| Scenario | Result |
+|----------|--------|
+| A sets key `x`, B sets key `y` (x ≠ y) | Both `x` and `y` in merged map |
+| A deletes key `x`, B doesn't touch `x` | `x` removed from merged map |
+| A deletes key `x`, B sets new value for `x` | `x` has B's new value |
+| Both delete key `x` | `x` deleted from merged map |
+| **Both set key `x` to different values** | **Randomly choose one (but all nodes agree)** |
+
+**"Randomly choose"** = Arbitrary but deterministic (based on operation ID)
+
+### List Merge Rules
+
+**Key concept:** Every element has an ID. Operations reference IDs, not indices!
+
+| Scenario | Result |
+|----------|--------|
+| A and B both insert after index `i` | Arbitrarily choose order, but **preserve insertion order per replica** |
+| A deletes element at `i`, B updates element at `i` | Keep B's updated value (delete loses) |
+| Both delete element `i` | Remove from merged list |
+
+**Example - Preserving insertion order:**
+```
+Initial: [a, b]
+A inserts [d, e] after b
+B inserts [f, g] after b
+
+Result: [a, b, d, e, f, g]  OR  [a, b, f, g, d, e]
+(One order chosen, but d→e and f→g order preserved)
+```
+
+### Text Merge Rules
+
+**Text uses same logic as lists** (each character = list element)
+
+- Characters merged with list algorithm
+- Marks (formatting) merged with [Peritext](https://www.inkandswitch.com/peritext/) algorithm
+
+### Counter Merge Rules
+
+**Simplest case:** Just sum all operations from each node!
+
+```
+Node A: increment(5)
+Node B: increment(3)
+Merged: counter = 8
+```
+
+### Conflict Detection
+
+**Only real conflict:** Concurrent updates to same property in same object
+
+```js
+let doc1 = Automerge.change(Automerge.init(), doc => { doc.x = 1 })
+let doc2 = Automerge.change(Automerge.init(), doc => { doc.x = 2 })
+doc1 = Automerge.merge(doc1, doc2)
+
+doc1.x // Either 1 or 2 (deterministic across all nodes)
+Automerge.getConflicts(doc1, "x")
+// {'1@01234567': 1, '1@89abcdef': 2}  // Both values preserved!
+```
+
+**Conflict resolution:**
+- Uses **LWW (Last Writer Wins)** based on operation ID (not wall clock!)
+- Operation ID = counter + actorId
+- All conflicting values accessible via `getConflicts()`
+- Next assignment automatically resolves conflict
+
+---
+
+## Storage Model - How doc.am Files are Stored
+
+### Storage Key Format
+
+**Not simple key-value!** Keys are arrays:
+```
+[<document ID>, <chunk type>, <chunk identifier>]
+
+chunk type: "snapshot" | "incremental"
+chunk identifier:
+  - snapshot: heads of document at compaction time
+  - incremental: hash of change bytes
+```
+
+### Example Storage Keys
+```
+["3RFyJzsLsZ7M", "incremental", "0290cdc2..."]  // Single change
+["3RFyJzsLsZ7M", "snapshot", "abc123..."]       // Compacted snapshot
+```
+
+### Incremental Changes vs Snapshots
+
+**Incremental change:** A single change (or small set of changes) to document
+**Snapshot:** All changes compacted into single binary blob
+
+### Storage Lifecycle
+
+1. **Initial document creation:**
+   ```
+   ["docId", "incremental", "hash1"]  // Init change
+   ```
+
+2. **User makes edits:**
+   ```
+   ["docId", "incremental", "hash1"]
+   ["docId", "incremental", "hash2"]
+   ["docId", "incremental", "hash3"]
+   ```
+
+3. **Compaction triggers:**
+   - Load all incremental changes
+   - Merge into single snapshot
+   - Save snapshot with heads as identifier
+   - Delete **only** incremental changes this process loaded
+
+   ```
+   ["docId", "snapshot", "heads_abc"]  // Compacted
+   ```
+
+### Concurrent Storage Access
+
+**Challenge:** Multiple processes writing to same document storage
+
+**Solution:** Use document heads as part of key
+- If two processes compact simultaneously, they only delete changes they loaded
+- Overwriting same snapshot key is safe (same changes = same bytes)
+- No locks or transactions required!
+
+```
+Process A compacts: sees changes 1,2,3 → writes snapshot, deletes 1,2,3
+Process B compacts: sees changes 1,2,3,4 → writes snapshot, deletes 1,2,3,4
+Process B's snapshot includes all of A's data → safe!
+```
+
+### Storage Adapter Interface
+
+```typescript
+abstract class StorageAdapter {
+  abstract load(key: StorageKey): Promise<Uint8Array | undefined>
+  abstract save(key: StorageKey, data: Uint8Array): Promise<void>
+  abstract remove(key: StorageKey): Promise<void>
+  abstract loadRange(keyPrefix: StorageKey): Promise<{key, data}[]>
+  abstract removeRange(keyPrefix: StorageKey): Promise<void>
+}
+```
+
+**Why range queries?** Load all chunks for a document: `loadRange(["docId"])`
+
+### Storage Backends
+
+Can implement over:
+- ✅ IndexedDB (browser)
+- ✅ Local filesystem directory
+- ✅ S3 bucket
+- ✅ PostgreSQL
+- ✅ Any key-value store with range queries
+
+### Loading Multiple Snapshots
+
+**Magic of CRDTs:** If storage contains multiple snapshots (from concurrent processes), loading merges them automatically!
+
+```
+Storage:
+  ["docId", "snapshot", "heads_A"]  // From tab A
+  ["docId", "snapshot", "heads_B"]  // From tab B
+
+On load:
+  - Load both snapshots
+  - Merge them (CRDT merge)
+  - Result includes all changes from A and B!
+```
+
+---
+
+## Network Sync Protocol
+
+### Transport-Agnostic Design
+
+Automerge sync works over ANY message-passing channel:
+- ✅ WebSockets
+- ✅ HTTP (SSE/long-polling)
+- ✅ MessageChannel (browser tabs)
+- ✅ BroadcastChannel (browser)
+- ✅ NATS pub/sub
+- ✅ Custom transports
+
+### Sync is Point-to-Point
+
+**Important:** Sync protocol is between **two peers** (not broadcast!)
+- Each peer has sync state with every other peer
+- Broadcast channels are inefficient (must duplicate messages per peer)
+
+### Sync Message Flow
+
+```
+Peer A                              Peer B
+  |                                    |
+  |  Generate sync message             |
+  |  (based on what B knows)           |
+  |---------------------------------->|
+  |                    Receive message
+  |                    Apply changes
+  |                    Generate response
+  |<----------------------------------|
+  |  Receive response                 |
+  |  Apply changes                    |
+  |  (may generate more messages)     |
+```
+
+### Sync State Management
+
+Each peer tracks:
+- **What I've sent to peer B**
+- **What peer B has acknowledged**
+- **What changes I need to send next**
+
+### Efficient Delta Sync
+
+**Don't send:**
+- ❌ Full document every time
+- ❌ Changes the peer already has
+
+**Do send:**
+- ✅ Only new operations since last sync
+- ✅ Minimal binary representation
+- ✅ Compressed format
+
+### Network Adapter Pattern (JavaScript)
+
+```typescript
+class NetworkAdapter {
+  // Called when repo wants to send sync message
+  send(targetId: PeerId, message: Uint8Array): void
+
+  // Call this when message received from network
+  this.emit('message', { from: senderId, data: message })
+}
+```
+
+### Example: WebSocket Sync
+
+**Server side:**
+```typescript
+import { WebSocketServer } from "ws"
+import { NodeWSServerAdapter } from "@automerge/automerge-repo-network-websocket"
+
+const wss = new WebSocketServer({ port: 8080 })
+const adapter = new NodeWSServerAdapter(wss)
+```
+
+**Client side:**
+```typescript
+import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket"
+
+const adapter = new BrowserWebSocketClientAdapter("ws://localhost:8080")
+```
+
+### Sync Over HTTP (Our Use Case)
+
+For HTTP/SSE, we need to implement:
+1. **Client → Server:** POST sync messages
+2. **Server → Client:** SSE stream for sync messages
+3. **Per-client sync state** on server
+
+```go
+// Pseudo-code for Go server
+type SyncState struct {
+    clientSyncStates map[string]*automerge.SyncState
+}
+
+func (s *Server) handleSyncMessage(clientId string, msg []byte) {
+    syncState := s.clientSyncStates[clientId]
+
+    // Apply incoming sync message
+    doc.receiveSyncMessage(syncState, msg)
+
+    // Generate response (if needed)
+    if response := doc.generateSyncMessage(syncState); len(response) > 0 {
+        s.broadcastToClient(clientId, response)
+    }
+}
+```
+
+---
+
 ## Rust Implementation Notes
 
 ### Rust API Mapping
