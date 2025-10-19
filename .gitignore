@@ -38,3 +38,4 @@ go.work.sum
 
 # Go
 /go/cmd/server/go.sum
+.src/
