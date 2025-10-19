@@ -22,7 +22,11 @@ https://github.com/automerge/automerge
 
 https://github.com/automerge/automerge/releases/tag/rust%2Fautomerge%400.7.0
 
-https://automerge.org/docs/hello/
+DOCS: https://github.com/automerge/automerge.github.io
+
+You MUST Keep a copy of the automerge docs in .src.
+
+You MUST understand the DOCS, so that you know how to use automerge properly !!  I want you to keep a AGENT_AUTOMERGE.MD file up to date so that you as an AI can full understand automerge. 
 
 ---
 
