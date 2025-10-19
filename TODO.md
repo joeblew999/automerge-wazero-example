@@ -162,15 +162,27 @@ Automerge documents are JSON-like:
 ## TODO List
 
 ### Phase 0: Fix Data Model (BLOCKING!)
+
+#### Browser Setup
+- [x] **Add Automerge.js to browser**
+  - [x] Load via CDN: `https://esm.sh/@automerge/automerge@3.1.2`
+  - [x] Initialize Automerge document on page load
+  - [x] Make available globally for debugging (`window.Automerge`)
+
+#### Rust WASI Module - Text CRDT
 - [ ] **Replace string-based text with Automerge.Text type**
   - [ ] Update Rust lib.rs: `doc.put_object(ROOT, "text", ObjType::Text)` (returns ObjId)
   - [ ] Store text ObjId in thread-local state (needed for all text operations)
   - [ ] Replace `am_set_text()` with `am_text_splice(pos, del_count, insert_str, len)`
   - [ ] Update `am_get_text()` to read from Text object using stored ObjId
   - [ ] Add helper: `am_text_len()` to get current text length
+
+#### Go Server Updates
 - [ ] **Update Go server to call am_text_splice instead of am_set_text**
   - [ ] Parse incoming text changes to determine pos, delete, insert
   - [ ] Or: Use `updateText` pattern (diff old vs new, generate splices)
+
+#### Testing
 - [ ] **Test character-level operations work correctly**
   - [ ] Insert at position 0, middle, end
   - [ ] Delete characters
