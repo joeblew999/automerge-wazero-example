@@ -36,7 +36,16 @@ https://github.com/starfederation/datastar-go
 
 https://data-star.dev
 
+You MUST Keep a copy of the datastar-go in .src.
+
+You MUST understand the DOCS, so that you know how to use automerge properly !!  I want you to keep a AGENT_AUTOMERGE.MD file up to date so that you as an AI can full understand automerge. 
+
+
+
 **TESTING**
+
+NEVER EVER ASSUME your CODE works. you MUST design the code so that you can test via Playwright MCP and you MUST test the code this way, before you declare any code or phase to be finished.
+
 
 you MUST use your playwright MCP to Test that it works from the outside, and you MUST keep screenshots that the README.md references so that people can see the screenshots
 
@@ -44,7 +53,7 @@ you MUST keep the makefile and README.md up to date.
 
 you MUST keep the .gitignore files up to date.
 
-you MUST keep the TODO.md up to date with current tasks, completed work, and next steps.
+you MUST keep the TODO.md up to date with current tasks, completed work, and next steps. YOU MUST KEEP THE TODO.md and the code in sync !!
 
 **Branches**:
 

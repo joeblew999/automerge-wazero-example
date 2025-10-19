@@ -1,10 +1,12 @@
-use automerge::{AutoCommit, ReadDoc, transaction::Transactable};
+use automerge::{AutoCommit, ReadDoc, transaction::Transactable, ObjType, ObjId};
 use std::cell::RefCell;
 use std::alloc::{alloc, dealloc, Layout};
 
-// Global document - in a real application, consider thread-local or passed context
+// Global document and text object ID
+// In a real application, consider thread-local or passed context
 thread_local! {
     static DOC: RefCell<Option<AutoCommit>> = RefCell::new(None);
+    static TEXT_OBJ_ID: RefCell<Option<ObjId>> = RefCell::new(None);
 }
 
 // Memory management exports
@@ -36,71 +38,123 @@ pub extern "C" fn am_free(ptr: *mut u8, size: usize) {
     unsafe { dealloc(ptr, layout) }
 }
 
-// Initialize a new Automerge document with a "content" text field
+// Initialize a new Automerge document with a "content" Text CRDT object
 #[no_mangle]
 pub extern "C" fn am_init() -> i32 {
     DOC.with(|doc_cell| {
-        let mut doc = AutoCommit::new();
+        TEXT_OBJ_ID.with(|text_id_cell| {
+            let mut doc = AutoCommit::new();
 
-        // Create a text object at key "content"
-        if let Err(_) = doc.put(automerge::ROOT, "content", "") {
-            return -1;
-        }
+            // Create a Text object (CRDT) at key "content"
+            let text_obj_id = match doc.put_object(automerge::ROOT, "content", ObjType::Text) {
+                Ok(id) => id,
+                Err(_) => return -1,
+            };
 
-        *doc_cell.borrow_mut() = Some(doc);
-        0
+            // Store the text object ID for later operations
+            *text_id_cell.borrow_mut() = Some(text_obj_id);
+            *doc_cell.borrow_mut() = Some(doc);
+            0
+        })
     })
 }
 
-// Set the entire text content
+// Splice text at a given position (proper Text CRDT operation)
+// pos: byte position to start
+// del_count: number of UTF-8 characters to delete
+// insert_ptr: pointer to string to insert
+// insert_len: length of string to insert
+#[no_mangle]
+pub extern "C" fn am_text_splice(pos: usize, del_count: i64, insert_ptr: *const u8, insert_len: usize) -> i32 {
+    let insert_text = if insert_len > 0 && !insert_ptr.is_null() {
+        let slice = unsafe { std::slice::from_raw_parts(insert_ptr, insert_len) };
+        match std::str::from_utf8(slice) {
+            Ok(s) => s,
+            Err(_) => return -2, // Invalid UTF-8
+        }
+    } else {
+        ""
+    };
+
+    DOC.with(|doc_cell| {
+        TEXT_OBJ_ID.with(|text_id_cell| {
+            let mut doc_opt = doc_cell.borrow_mut();
+            let text_id_opt = text_id_cell.borrow();
+
+            let doc = match doc_opt.as_mut() {
+                Some(d) => d,
+                None => return -3, // Document not initialized
+            };
+
+            let text_id = match text_id_opt.as_ref() {
+                Some(id) => id,
+                None => return -4, // Text object not initialized
+            };
+
+            // Convert i64 to isize for delete count
+            let del_count_isize = match del_count.try_into() {
+                Ok(n) => n,
+                Err(_) => return -6, // Invalid delete count
+            };
+
+            // Perform splice operation on Text CRDT
+            if let Err(_) = doc.splice_text(text_id, pos, del_count_isize, insert_text) {
+                return -5;
+            }
+
+            0
+        })
+    })
+}
+
+// DEPRECATED: Set the entire text content (for backward compatibility)
+// Use am_text_splice for proper Text CRDT operations
 #[no_mangle]
 pub extern "C" fn am_set_text(ptr: *const u8, len: usize) -> i32 {
     if ptr.is_null() {
         return -1;
     }
 
-    let slice = unsafe { std::slice::from_raw_parts(ptr, len) };
-    let text = match std::str::from_utf8(slice) {
-        Ok(s) => s,
-        Err(_) => return -2, // Invalid UTF-8
-    };
+    // Get current text length to delete all
+    let current_len = am_get_text_len() as usize;
 
-    DOC.with(|doc_cell| {
-        let mut doc_opt = doc_cell.borrow_mut();
-        let doc = match doc_opt.as_mut() {
-            Some(d) => d,
-            None => return -3, // Document not initialized
-        };
-
-        // Replace the "content" field
-        if let Err(_) = doc.put(automerge::ROOT, "content", text) {
-            return -4;
+    // Delete all existing text, then insert new text
+    // This is inefficient but maintains backward compatibility
+    if current_len > 0 {
+        // Delete all existing characters
+        if am_text_splice(0, current_len as i64, std::ptr::null(), 0) != 0 {
+            return -2;
         }
+    }
 
-        0
-    })
+    // Insert new text at position 0
+    am_text_splice(0, 0, ptr, len)
 }
 
 // Get the length of the text content
 #[no_mangle]
 pub extern "C" fn am_get_text_len() -> u32 {
     DOC.with(|doc_cell| {
-        let doc_opt = doc_cell.borrow();
-        let doc = match doc_opt.as_ref() {
-            Some(d) => d,
-            None => return 0,
-        };
+        TEXT_OBJ_ID.with(|text_id_cell| {
+            let doc_opt = doc_cell.borrow();
+            let text_id_opt = text_id_cell.borrow();
 
-        match doc.get(automerge::ROOT, "content") {
-            Ok(Some((value, _))) => {
-                if let Some(s) = value.to_str() {
-                    s.len() as u32
-                } else {
-                    0
-                }
+            let doc = match doc_opt.as_ref() {
+                Some(d) => d,
+                None => return 0,
+            };
+
+            let text_id = match text_id_opt.as_ref() {
+                Some(id) => id,
+                None => return 0,
+            };
+
+            // Get text from Text object
+            match doc.text(text_id) {
+                Ok(s) => s.len() as u32,
+                Err(_) => 0,
             }
-            _ => 0,
-        }
+        })
     })
 }
 
@@ -112,26 +166,32 @@ pub extern "C" fn am_get_text(ptr_out: *mut u8) -> i32 {
     }
 
     DOC.with(|doc_cell| {
-        let doc_opt = doc_cell.borrow();
-        let doc = match doc_opt.as_ref() {
-            Some(d) => d,
-            None => return -2, // Document not initialized
-        };
+        TEXT_OBJ_ID.with(|text_id_cell| {
+            let doc_opt = doc_cell.borrow();
+            let text_id_opt = text_id_cell.borrow();
 
-        match doc.get(automerge::ROOT, "content") {
-            Ok(Some((value, _))) => {
-                if let Some(s) = value.to_str() {
+            let doc = match doc_opt.as_ref() {
+                Some(d) => d,
+                None => return -2, // Document not initialized
+            };
+
+            let text_id = match text_id_opt.as_ref() {
+                Some(id) => id,
+                None => return -3, // Text object not initialized
+            };
+
+            // Get text from Text object
+            match doc.text(text_id) {
+                Ok(s) => {
                     let bytes = s.as_bytes();
                     unsafe {
                         std::ptr::copy_nonoverlapping(bytes.as_ptr(), ptr_out, bytes.len());
                     }
                     0
-                } else {
-                    -3 // Not a string
                 }
+                Err(_) => -4, // Failed to get text
             }
-            _ => -4, // Field not found
-        }
+        })
     })
 }
 

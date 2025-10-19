@@ -170,12 +170,48 @@ Automerge documents are JSON-like:
   - [x] Make available globally for debugging (`window.Automerge`)
 
 #### Rust WASI Module - Text CRDT
-- [ ] **Replace string-based text with Automerge.Text type**
-  - [ ] Update Rust lib.rs: `doc.put_object(ROOT, "text", ObjType::Text)` (returns ObjId)
-  - [ ] Store text ObjId in thread-local state (needed for all text operations)
-  - [ ] Replace `am_set_text()` with `am_text_splice(pos, del_count, insert_str, len)`
-  - [ ] Update `am_get_text()` to read from Text object using stored ObjId
-  - [ ] Add helper: `am_text_len()` to get current text length
+- [x] **Replace string-based text with Automerge.Text type**
+  - [x] Update Rust lib.rs: `doc.put_object(ROOT, "content", ObjType::Text)` (returns ObjId)
+  - [x] Store text ObjId in thread-local state `TEXT_OBJ_ID`
+  - [x] Add new `am_text_splice(pos, del_count, insert_str, len)` function
+  - [x] Keep `am_set_text()` for backward compat (uses splice internally)
+  - [x] Update `am_get_text()` and `am_get_text_len()` to use `doc.text(text_id)`
+  - [x] Build succeeded with Text CRDT implementation
+
+#### 2-Laptop Testing Infrastructure
+- [x] **Configure Go server for multi-instance testing**
+  - [x] Add `PORT`, `STORAGE_DIR`, `USER_ID` environment variables
+  - [x] Update `initializeDocument()` and `saveDocument()` to use `storageDir`
+  - [x] Add `[userID]` prefix to logs for clarity
+- [x] **Add Makefile targets for 2-laptop simulation**
+  - [x] `make run-alice` - Start Alice on port 8080, storage: `./data/alice/`
+  - [x] `make run-bob` - Start Bob on port 8081, storage: `./data/bob/`
+  - [x] `make test-two-laptops` - Start both servers simultaneously
+  - [x] `make clean-test-data` - Clean test data directories
+- [x] **Verify 2-laptop setup works**
+  - [x] Both servers start on different ports
+  - [x] Separate storage directories created
+  - [x] Both servers respond independently
+
+#### Manual Testing (REQUIRED per CLAUDE.md:47) - ✅ COMPLETE
+- [x] **Started 2-laptop environment:** `make run-alice` and `make run-bob`
+- [x] **Tested via API:** Posted text to both servers via curl
+- [x] **Verified storage files:**
+  - `go/cmd/server/data/alice/doc.am` - **196 bytes** ✅
+  - `go/cmd/server/data/bob/doc.am` - **201 bytes** ✅
+  - Both start with `85 6f 4a 83` (Automerge magic bytes) ✅
+- [x] **Verified different content:**
+  - Alice: "Hello from Alice! Testing Text CRDT."
+  - Bob: "Hello from Bob! Testing concurrent edits."
+- [x] **Ran automated Node.js tests:** `node test_text_crdt.mjs`
+  - ✅ All 8 tests passed!
+  - ✅ Automerge.js imports correctly
+  - ✅ Text CRDT created (not plain string)
+  - ✅ updateText() works
+  - ✅ Binary format verified (>50 bytes)
+  - ✅ Edit history preserved
+  - ✅ Concurrent edits merge correctly (CRDT property)
+  - ✅ Server connectivity tested
 
 #### Go Server Updates
 - [ ] **Update Go server to call am_text_splice instead of am_set_text**

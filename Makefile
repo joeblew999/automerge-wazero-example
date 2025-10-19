@@ -1,4 +1,4 @@
-.PHONY: help build-wasi build-wasi-debug run dev watch test tidy clean clean-snapshots clean-all check-deps install-deps
+.PHONY: help build-wasi build-wasi-debug run dev watch test tidy clean clean-snapshots clean-all check-deps install-deps run-alice run-bob run-server test-two-laptops clean-test-data
 
 # Configuration
 WASI_TARGET = wasm32-wasip1
@@ -97,3 +97,46 @@ size:
 	@echo "📊 Build artifacts sizes:"
 	@[ -f $(WASM_RELEASE) ] && ls -lh $(WASM_RELEASE) || echo "  Release WASM: not built"
 	@[ -f $(WASM_DEBUG) ] && ls -lh $(WASM_DEBUG) || echo "  Debug WASM: not built"
+
+## run-alice: Run server as Laptop A (port 8080, storage: ./data/alice/)
+run-alice: build-wasi
+	@echo "🚀 Starting Laptop A (Alice) on port 8080..."
+	@mkdir -p data/alice
+	PORT=8080 STORAGE_DIR=./data/alice USER_ID=alice $(MAKE) -s run-server
+
+## run-bob: Run server as Laptop B (port 8081, storage: ./data/bob/)
+run-bob: build-wasi
+	@echo "🚀 Starting Laptop B (Bob) on port 8081..."
+	@mkdir -p data/bob
+	PORT=8081 STORAGE_DIR=./data/bob USER_ID=bob $(MAKE) -s run-server
+
+## run-server: Internal target to run Go server (uses env vars)
+run-server:
+	cd $(GO_DIR) && go run main.go
+
+## test-two-laptops: Start both Alice and Bob servers for testing
+test-two-laptops: build-wasi
+	@echo "🧪 Starting 2-laptop test environment..."
+	@mkdir -p data/alice data/bob
+	@echo "  Alice: http://localhost:8080 (storage: ./data/alice/)"
+	@echo "  Bob:   http://localhost:8081 (storage: ./data/bob/)"
+	@echo ""
+	@echo "Starting Alice..."
+	@PORT=8080 STORAGE_DIR=./data/alice USER_ID=alice $(MAKE) -s run-server &
+	@sleep 2
+	@echo "Starting Bob..."
+	@PORT=8081 STORAGE_DIR=./data/bob USER_ID=bob $(MAKE) -s run-server &
+	@sleep 2
+	@echo ""
+	@echo "✅ Both servers running!"
+	@echo "   Open http://localhost:8080 (Alice's laptop)"
+	@echo "   Open http://localhost:8081 (Bob's laptop)"
+	@echo ""
+	@echo "Press Ctrl+C to stop both servers"
+	@wait
+
+## clean-test-data: Clean test laptop data directories
+clean-test-data:
+	@echo "🧹 Cleaning test data..."
+	rm -rf data/alice data/bob
+	@echo "✅ Test data cleaned"

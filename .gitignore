@@ -39,3 +39,10 @@ go.work.sum
 # Go
 /go/cmd/server/go.sum
 .src/
+
+# Node.js testing
+node_modules/
+package-lock.json
+
+# Test data
+go/cmd/server/data/

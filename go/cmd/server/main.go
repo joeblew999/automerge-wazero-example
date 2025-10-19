@@ -17,9 +17,24 @@ import (
 )
 
 const (
-	wasmPath     = "../../../rust/automerge_wasi/target/wasm32-wasip1/release/automerge_wasi.wasm"
-	snapshotPath = "../../../doc.am"
-	port         = "8080"
+	wasmPath = "../../../rust/automerge_wasi/target/wasm32-wasip1/release/automerge_wasi.wasm"
+)
+
+// getEnv returns environment variable or default value
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+var (
+	// Storage directory for doc.am (configurable for multi-laptop testing)
+	storageDir = getEnv("STORAGE_DIR", "../../../")
+	// Server port (configurable for running multiple instances)
+	port = getEnv("PORT", "8080")
+	// User ID for logging (optional, helps distinguish laptop A vs B)
+	userID = getEnv("USER_ID", "default")
 )
 
 type Server struct {
@@ -83,14 +98,17 @@ func main() {
 }
 
 func (s *Server) initializeDocument(ctx context.Context) error {
+	// Construct snapshot path from storage directory
+	snapshotPath := filepath.Join(storageDir, "doc.am")
+
 	// Try to load existing snapshot
 	if data, err := os.ReadFile(snapshotPath); err == nil {
-		log.Println("Loading existing snapshot...")
+		log.Printf("[%s] Loading existing snapshot from %s...", userID, snapshotPath)
 		return s.loadDocument(ctx, data)
 	}
 
 	// Initialize new document
-	log.Println("Initializing new document...")
+	log.Printf("[%s] Initializing new document...", userID)
 	initFn := s.modInst.ExportedFunction("am_init")
 	if initFn == nil {
 		return fmt.Errorf("am_init function not found")
@@ -303,6 +321,9 @@ func (s *Server) saveDocument(ctx context.Context) error {
 		return fmt.Errorf("failed to read memory")
 	}
 
+	// Construct snapshot path from storage directory
+	snapshotPath := filepath.Join(storageDir, "doc.am")
+
 	// Write to file
 	if err := os.MkdirAll(filepath.Dir(snapshotPath), 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
@@ -312,6 +333,7 @@ func (s *Server) saveDocument(ctx context.Context) error {
 		return fmt.Errorf("failed to write snapshot: %w", err)
 	}
 
+	log.Printf("[%s] Saved document to %s (%d bytes)", userID, snapshotPath, len(data))
 	return nil
 }
 
