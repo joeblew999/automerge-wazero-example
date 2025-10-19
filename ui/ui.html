@@ -178,7 +178,14 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        // Import Automerge via CDN
+        import * as Automerge from 'https://esm.sh/@automerge/automerge@3.1.2';
+
+        // Make Automerge globally available for debugging
+        window.Automerge = Automerge;
+        console.log('✅ Automerge.js loaded:', Automerge);
+
         const textEditor = document.getElementById('textEditor');
         const saveBtn = document.getElementById('saveBtn');
         const clearBtn = document.getElementById('clearBtn');
@@ -187,6 +194,10 @@
 
         let eventSource = null;
         let isLocalChange = false;
+
+        // Initialize local Automerge document (for future Phase 2 implementation)
+        let doc = Automerge.init();
+        console.log('📄 Automerge document initialized:', doc);
 
         // Update character count
         function updateCharCount() {
