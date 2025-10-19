@@ -4,6 +4,11 @@
 
 This prototype demonstrates running [Automerge](https://automerge.org) CRDT compiled to WebAssembly (WASI) and hosted in a Go server using [wazero](https://wazero.io). Real-time collaborative editing is enabled via Server-Sent Events (SSE).
 
+## Screenshot
+
+![Collaborative Text Editor](screenshots/screenshot.png)
+*Screenshot of the collaborative text editor interface with purple gradient background, text area, and real-time status indicator*
+
 ## Architecture
 
 - **Rust WASI module**: Wraps Automerge core with C-like ABI exports
@@ -21,7 +26,7 @@ This prototype demonstrates running [Automerge](https://automerge.org) CRDT comp
 
 ```bash
 # Clone the repository
-git clone https://github.com/joeblew99/automerge-wazero-example.git
+git clone https://github.com/joeblew999/automerge-wazero-example.git
 cd automerge-wazero-example
 
 # Build and run (builds WASI module + starts server)

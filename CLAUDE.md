@@ -32,9 +32,13 @@ https://data-star.dev
 
 **TESTING**
 
-you MUST use your playwright MCP to Test that it works from the outside. 
+you MUST use your playwright MCP to Test that it works from the outside, and you MUST keep screenshots that the README.md references so that people can see the screenshots
 
 you MUST keep the makefile and README.md up to date.
+
+you MUST keep the .gitignore files up to date.
+
+you MUST keep the TODO.md up to date with current tasks, completed work, and next steps.
 
 **Branches**:
 
