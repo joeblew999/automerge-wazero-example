@@ -241,12 +241,68 @@ pub extern "C" fn am_load(ptr: *const u8, len: usize) -> i32 {
     let slice = unsafe { std::slice::from_raw_parts(ptr, len) };
 
     DOC.with(|doc_cell| {
-        match AutoCommit::load(slice) {
-            Ok(doc) => {
-                *doc_cell.borrow_mut() = Some(doc);
-                0
+        TEXT_OBJ_ID.with(|text_id_cell| {
+            match AutoCommit::load(slice) {
+                Ok(doc) => {
+                    // After loading, find the text object ID
+                    // Assuming the text field is at key "content"
+                    match doc.get(automerge::ROOT, "content") {
+                        Ok(Some((_, obj_id))) => {
+                            *text_id_cell.borrow_mut() = Some(obj_id);
+                        }
+                        _ => {
+                            // Text object not found, this is an error
+                            return -3;
+                        }
+                    }
+
+                    *doc_cell.borrow_mut() = Some(doc);
+                    0
+                }
+                Err(_) => -2, // Failed to load
             }
-            Err(_) => -2, // Failed to load
-        }
+        })
+    })
+}
+
+// Merge another document into the current document
+// This is the CRDT magic! Two diverged documents can be merged without conflicts
+#[no_mangle]
+pub extern "C" fn am_merge(other_ptr: *const u8, other_len: usize) -> i32 {
+    if other_ptr.is_null() {
+        return -1;
+    }
+
+    let other_slice = unsafe { std::slice::from_raw_parts(other_ptr, other_len) };
+
+    // Load the other document
+    let mut other_doc = match AutoCommit::load(other_slice) {
+        Ok(d) => d,
+        Err(_) => return -2, // Failed to load other document
+    };
+
+    DOC.with(|doc_cell| {
+        TEXT_OBJ_ID.with(|text_id_cell| {
+            let mut doc_opt = doc_cell.borrow_mut();
+            let doc = match doc_opt.as_mut() {
+                Some(d) => d,
+                None => return -3, // Current document not initialized
+            };
+
+            // Perform CRDT merge!
+            doc.merge(&mut other_doc.fork()).expect("Merge failed");
+
+            // After merge, update text_id in case it changed
+            match doc.get(automerge::ROOT, "content") {
+                Ok(Some((_, obj_id))) => {
+                    *text_id_cell.borrow_mut() = Some(obj_id);
+                }
+                _ => {
+                    return -4; // Text object not found after merge
+                }
+            }
+
+            0
+        })
     })
 }
