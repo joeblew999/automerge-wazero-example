@@ -91,6 +91,8 @@ func main() {
 	// Setup HTTP handlers
 	http.HandleFunc("/api/text", server.handleText)
 	http.HandleFunc("/api/stream", server.handleStream)
+	http.HandleFunc("/api/merge", server.handleMerge)
+	http.HandleFunc("/api/doc", server.handleDoc)
 	http.HandleFunc("/", server.handleUI)
 
 	log.Printf("Server starting on http://localhost:%s", port)
@@ -517,4 +519,197 @@ func (s *Server) handleUI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.ServeFile(w, r, "../../../ui/ui.html")
+}
+
+// GET /api/doc - Download the current doc.am file
+func (s *Server) handleDoc(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ctx := r.Context()
+	s.mu.RLock()
+	data, err := s.saveDocumentToBytes(ctx)
+	s.mu.RUnlock()
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to save document: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s-doc.am\"", userID))
+	w.Write(data)
+	log.Printf("[%s] Sent doc.am (%d bytes)", userID, len(data))
+}
+
+// POST /api/merge - Merge another doc.am into this one (CRDT magic!)
+func (s *Server) handleMerge(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ctx := r.Context()
+
+	// Read the incoming doc.am binary
+	otherDoc, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read body", http.StatusBadRequest)
+		return
+	}
+
+	if len(otherDoc) == 0 {
+		http.Error(w, "Empty document", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("[%s] Received doc.am to merge (%d bytes)", userID, len(otherDoc))
+
+	s.mu.Lock()
+	err = s.mergeDocument(ctx, otherDoc)
+	s.mu.Unlock()
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Merge failed: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// After merge, get the new text and broadcast
+	s.mu.RLock()
+	text, err := s.getText(ctx)
+	s.mu.RUnlock()
+
+	if err == nil {
+		s.broadcast(text)
+	}
+
+	// Save the merged document
+	s.mu.Lock()
+	s.saveDocument(ctx)
+	s.mu.Unlock()
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Merged successfully! New text: %s", text)
+	log.Printf("[%s] Merge complete, new text: %s", userID, text)
+}
+
+func (s *Server) saveDocumentToBytes(ctx context.Context) ([]byte, error) {
+	// Get save length
+	saveLenFn := s.modInst.ExportedFunction("am_save_len")
+	if saveLenFn == nil {
+		return nil, fmt.Errorf("am_save_len function not found")
+	}
+
+	results, err := saveLenFn.Call(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call am_save_len: %w", err)
+	}
+
+	saveLen := results[0]
+	if saveLen == 0 {
+		return nil, fmt.Errorf("document is empty")
+	}
+
+	// Allocate memory
+	allocFn := s.modInst.ExportedFunction("am_alloc")
+	if allocFn == nil {
+		return nil, fmt.Errorf("am_alloc function not found")
+	}
+
+	results, err = allocFn.Call(ctx, uint64(saveLen))
+	if err != nil {
+		return nil, fmt.Errorf("failed to allocate memory: %w", err)
+	}
+
+	ptr := uint32(results[0])
+	if ptr == 0 {
+		return nil, fmt.Errorf("allocation failed")
+	}
+
+	// Save document
+	saveFn := s.modInst.ExportedFunction("am_save")
+	if saveFn == nil {
+		return nil, fmt.Errorf("am_save function not found")
+	}
+
+	results, err = saveFn.Call(ctx, uint64(ptr))
+	if err != nil {
+		return nil, fmt.Errorf("failed to save document: %w", err)
+	}
+
+	if results[0] != 0 {
+		return nil, fmt.Errorf("am_save returned error: %d", results[0])
+	}
+
+	// Read from memory
+	mem := s.modInst.Memory()
+	if mem == nil {
+		return nil, fmt.Errorf("memory not found")
+	}
+
+	data, ok := mem.Read(ptr, saveLen)
+	if !ok {
+		return nil, fmt.Errorf("failed to read memory")
+	}
+
+	// Free memory
+	freeFn := s.modInst.ExportedFunction("am_free")
+	if freeFn != nil {
+		freeFn.Call(ctx, uint64(ptr), uint64(saveLen))
+	}
+
+	return data, nil
+}
+
+func (s *Server) mergeDocument(ctx context.Context, otherDoc []byte) error {
+	// Allocate memory for the other document
+	allocFn := s.modInst.ExportedFunction("am_alloc")
+	if allocFn == nil {
+		return fmt.Errorf("am_alloc function not found")
+	}
+
+	results, err := allocFn.Call(ctx, uint64(len(otherDoc)))
+	if err != nil {
+		return fmt.Errorf("failed to allocate memory: %w", err)
+	}
+
+	ptr := uint32(results[0])
+	if ptr == 0 {
+		return fmt.Errorf("allocation failed")
+	}
+
+	// Write other document to memory
+	mem := s.modInst.Memory()
+	if mem == nil {
+		return fmt.Errorf("memory not found")
+	}
+
+	if !mem.Write(ptr, otherDoc) {
+		return fmt.Errorf("failed to write to memory")
+	}
+
+	// Call am_merge
+	mergeFn := s.modInst.ExportedFunction("am_merge")
+	if mergeFn == nil {
+		return fmt.Errorf("am_merge function not found")
+	}
+
+	results, err = mergeFn.Call(ctx, uint64(ptr), uint64(len(otherDoc)))
+	if err != nil {
+		return fmt.Errorf("failed to call am_merge: %w", err)
+	}
+
+	if results[0] != 0 {
+		return fmt.Errorf("am_merge returned error: %d", results[0])
+	}
+
+	// Free memory
+	freeFn := s.modInst.ExportedFunction("am_free")
+	if freeFn != nil {
+		freeFn.Call(ctx, uint64(ptr), uint64(len(otherDoc)))
+	}
+
+	return nil
 }

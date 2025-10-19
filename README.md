@@ -64,6 +64,8 @@ The server exposes these endpoints:
 - `GET /api/text` - Get current document text (text/plain)
 - `POST /api/text` - Update document text (JSON: `{"text":"..."}`)
 - `GET /api/stream` - Server-Sent Events stream for real-time updates
+- **`GET /api/doc`** - Download doc.am binary (CRDT snapshot) ✨ NEW
+- **`POST /api/merge`** - Merge another doc.am into this one (CRDT magic!) ✨ NEW
 
 ### Example API Usage
 
@@ -78,6 +80,13 @@ curl -X POST http://localhost:8080/api/text \
 
 # Stream updates (SSE)
 curl http://localhost:8080/api/stream
+
+# Download doc.am binary
+curl http://localhost:8080/api/doc > my-doc.am
+
+# Merge another doc.am (CRDT merge)
+curl -X POST http://localhost:8080/api/merge \
+  --data-binary @other-doc.am
 ```
 
 ## How It Works
@@ -106,6 +115,37 @@ curl http://localhost:8080/api/stream
 └── ui/
     └── ui.html           # Web interface
 ```
+
+## 🆕 CRDT Merge Feature
+
+This demo now supports **true CRDT merging**! Run multiple instances and merge their documents:
+
+```bash
+# Terminal 1: Alice's laptop
+PORT=8080 STORAGE_DIR=./data/alice USER_ID=alice make run-server
+
+# Terminal 2: Bob's laptop
+PORT=8081 STORAGE_DIR=./data/bob USER_ID=bob make run-server
+
+# Alice types "Hello from Alice!"
+# Bob types "Hello from Bob!"
+
+# Download Alice's document
+curl http://localhost:8080/api/doc > alice.am
+
+# Merge Alice's document into Bob's
+curl -X POST http://localhost:8081/api/merge --data-binary @alice.am
+
+# Bob's document now contains both edits! (CRDT magic)
+```
+
+Or use the automated test script:
+
+```bash
+./test_merge.sh  # Automated Alice + Bob merge scenario
+```
+
+See **[DEMO.md](DEMO.md)** for complete documentation!
 
 ## Development
 
