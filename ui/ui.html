@@ -195,9 +195,10 @@
         let eventSource = null;
         let isLocalChange = false;
 
-        // Initialize local Automerge document (for future Phase 2 implementation)
-        let doc = Automerge.init();
-        console.log('📄 Automerge document initialized:', doc);
+        // Initialize local Automerge document with Text CRDT
+        let doc = Automerge.from({ text: "" });
+        console.log('📄 Automerge document initialized with Text CRDT:', doc);
+        console.log('   Text value:', doc.text);
 
         // Update character count
         function updateCharCount() {
@@ -309,7 +310,22 @@
             }
         });
 
-        textEditor.addEventListener('input', updateCharCount);
+        // On every keystroke: update Automerge Text CRDT
+        textEditor.addEventListener('input', (e) => {
+            updateCharCount();
+
+            // Update local Automerge document using updateText
+            // This automatically diffs old vs new and generates splice operations!
+            doc = Automerge.change(doc, d => {
+                Automerge.updateText(d, ["text"], e.target.value);
+            });
+
+            console.log('📝 Text updated in Automerge doc:', doc.text);
+
+            // TODO Phase 2: Generate and send sync message instead of full text
+            // const syncMsg = doc.generateSyncMessage(peerState);
+            // fetch('/api/sync', { method: 'POST', body: syncMsg });
+        });
 
         // Keyboard shortcuts
         textEditor.addEventListener('keydown', (e) => {
