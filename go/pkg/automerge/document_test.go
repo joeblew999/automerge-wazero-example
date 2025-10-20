@@ -339,23 +339,35 @@ func TestDocument_Get_NotImplemented(t *testing.T) {
 	}
 	defer doc.Close(ctx)
 
-	// Test Map.Get (not implemented)
-	_, err = doc.Get(ctx, automerge.Root(), "key")
+	// Test Map.Get - now implemented for ROOT map!
+	// Getting a non-existent key should return an error
+	_, err = doc.Get(ctx, automerge.Root(), "nonexistent")
 	if err == nil {
-		t.Error("Get() should return error (not implemented)")
+		t.Error("Get() for non-existent key should return error")
 	}
 
+	// But getting an existing key should work
+	err = doc.Put(ctx, automerge.Root(), "testkey", automerge.NewString("testvalue"))
+	if err != nil {
+		t.Fatalf("Put() failed: %v", err)
+	}
+
+	val, err := doc.Get(ctx, automerge.Root(), "testkey")
+	if err != nil {
+		t.Fatalf("Get() failed: %v", err)
+	}
+
+	str, ok := val.AsString()
+	if !ok || str != "testvalue" {
+		t.Errorf("Get() returned wrong value: got %q, want %q", str, "testvalue")
+	}
+
+	// Nested maps still not implemented
+	nestedPath := automerge.Root().Get("nested")
+	_, err = doc.Get(ctx, nestedPath, "key")
 	var notImpl *automerge.NotImplementedError
 	if !errors.As(err, &notImpl) {
-		t.Fatalf("Expected NotImplementedError, got %T: %v", err, err)
-	}
-
-	if notImpl.Feature != "Get" {
-		t.Errorf("Feature = %s, want 'Get'", notImpl.Feature)
-	}
-
-	if notImpl.Milestone != "M2" {
-		t.Errorf("Milestone = %s, want 'M2'", notImpl.Milestone)
+		t.Fatalf("Expected NotImplementedError for nested map, got %T: %v", err, err)
 	}
 }
 

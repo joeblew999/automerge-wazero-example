@@ -39,9 +39,9 @@ mod memory;
 mod state;
 mod document;
 mod text;
+mod map;
 
 // Future modules (M1, M2, M4)
-// mod map;
 // mod list;
 // mod counter;
 // mod sync;
@@ -51,3 +51,4 @@ mod text;
 pub use memory::*;
 pub use document::*;
 pub use text::*;
+pub use map::*;
