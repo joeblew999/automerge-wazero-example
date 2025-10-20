@@ -2,27 +2,44 @@ package automerge
 
 import "context"
 
-// Counter Operations - For M2 Milestone
-//
-// Counters are special CRDT values that merge by addition rather than
-// last-write-wins. Perfect for like counts, view counts, etc.
+// Counter Operations
 
-// Increment increments a counter at a key by the given delta.
+// Increment increments (or decrements) a counter at a key.
 //
-// Counters can be incremented (positive delta) or decremented (negative delta).
-// When two peers concurrently increment a counter, both changes are preserved
-// and the final value is the sum of all increments.
-//
-// Example:
-//   // Peer A: counter = 0, increment by 5 → 5
-//   // Peer B: counter = 0, increment by 3 → 3
-//   // After merge: counter = 8 (not 5 or 3!)
-//
-// Status: ❌ Not implemented (requires M2)
+// Status: ✅ Implemented for ROOT map
 func (d *Document) Increment(ctx context.Context, path Path, key string, delta int64) error {
-	return &NotImplementedError{
-		Feature:   "Increment",
-		Milestone: "M2",
-		Message:   "Requires am_increment WASI export",
+	if !d.isRootPath(path) {
+		return &NotImplementedError{
+			Feature:   "Increment (nested objects)",
+			Milestone: "M2",
+			Message:   "Only ROOT map counters are supported currently",
+		}
 	}
+
+	// Check if counter exists, create if not
+	_, err := d.runtime.AmCounterGet(ctx, key)
+	if err != nil {
+		// Counter doesn't exist, create it with delta as initial value
+		if err := d.runtime.AmCounterCreate(ctx, key, delta); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return d.runtime.AmCounterIncrement(ctx, key, delta)
+}
+
+// GetCounter retrieves the current value of a counter.
+//
+// Status: ✅ Implemented for ROOT map
+func (d *Document) GetCounter(ctx context.Context, path Path, key string) (int64, error) {
+	if !d.isRootPath(path) {
+		return 0, &NotImplementedError{
+			Feature:   "GetCounter (nested objects)",
+			Milestone: "M2",
+			Message:   "Only ROOT map counters are supported currently",
+		}
+	}
+
+	return d.runtime.AmCounterGet(ctx, key)
 }

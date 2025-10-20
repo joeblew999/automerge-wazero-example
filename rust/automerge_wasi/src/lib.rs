@@ -41,6 +41,7 @@ mod document;
 mod text;
 mod map;
 mod list;
+mod counter;
 
 // Future modules (M1, M2, M4)
 // mod counter;
@@ -53,3 +54,4 @@ pub use document::*;
 pub use text::*;
 pub use map::*;
 pub use list::*;
+pub use counter::*;
