@@ -1,0 +1,10 @@
+# Test data .gitignore
+# We commit the snapshots since they're small and needed for tests
+# But ignore any temporary files
+
+# Temporary test outputs
+*.tmp
+*.log
+
+# OS files
+.DS_Store

@@ -11,9 +11,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/tetratelabs/wazero"
-	"github.com/tetratelabs/wazero/api"
-	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
+	"github.com/joeblew999/automerge-wazero-example/pkg/automerge"
 )
 
 const (
@@ -38,9 +36,7 @@ var (
 )
 
 type Server struct {
-	runtime wazero.Runtime
-	module  wazero.CompiledModule
-	modInst api.Module
+	doc     *automerge.Document
 	mu      sync.RWMutex
 	clients []chan string
 }
@@ -52,34 +48,7 @@ type TextPayload struct {
 func main() {
 	ctx := context.Background()
 
-	// Create wazero runtime
-	runtime := wazero.NewRuntime(ctx)
-	defer runtime.Close(ctx)
-
-	// Instantiate WASI
-	wasi_snapshot_preview1.MustInstantiate(ctx, runtime)
-
-	// Load WASM module
-	wasmBytes, err := os.ReadFile(wasmPath)
-	if err != nil {
-		log.Fatalf("Failed to read WASM file: %v", err)
-	}
-
-	compiled, err := runtime.CompileModule(ctx, wasmBytes)
-	if err != nil {
-		log.Fatalf("Failed to compile WASM module: %v", err)
-	}
-
-	// Instantiate module
-	modInst, err := runtime.InstantiateModule(ctx, compiled, wazero.NewModuleConfig())
-	if err != nil {
-		log.Fatalf("Failed to instantiate module: %v", err)
-	}
-
 	server := &Server{
-		runtime: runtime,
-		module:  compiled,
-		modInst: modInst,
 		clients: make([]chan string, 0),
 	}
 
@@ -106,147 +75,44 @@ func (s *Server) initializeDocument(ctx context.Context) error {
 	// Try to load existing snapshot
 	if data, err := os.ReadFile(snapshotPath); err == nil {
 		log.Printf("[%s] Loading existing snapshot from %s...", userID, snapshotPath)
-		return s.loadDocument(ctx, data)
+		doc, err := automerge.Load(ctx, data)
+		if err != nil {
+			return fmt.Errorf("failed to load document: %w", err)
+		}
+		s.doc = doc
+		return nil
 	}
 
 	// Initialize new document
 	log.Printf("[%s] Initializing new document...", userID)
-	initFn := s.modInst.ExportedFunction("am_init")
-	if initFn == nil {
-		return fmt.Errorf("am_init function not found")
-	}
-
-	results, err := initFn.Call(ctx)
+	doc, err := automerge.New(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to call am_init: %w", err)
+		return fmt.Errorf("failed to create document: %w", err)
 	}
 
-	if len(results) > 0 && results[0] != 0 {
-		return fmt.Errorf("am_init returned error code: %d", results[0])
-	}
-
+	s.doc = doc
 	return nil
 }
 
 func (s *Server) getText(ctx context.Context) (string, error) {
-	// Get text length
-	getLenFn := s.modInst.ExportedFunction("am_get_text_len")
-	if getLenFn == nil {
-		return "", fmt.Errorf("am_get_text_len function not found")
-	}
-
-	results, err := getLenFn.Call(ctx)
-	if err != nil {
-		return "", fmt.Errorf("failed to get text length: %w", err)
-	}
-
-	textLen := uint32(results[0])
-	if textLen == 0 {
-		return "", nil
-	}
-
-	// Allocate buffer
-	allocFn := s.modInst.ExportedFunction("am_alloc")
-	if allocFn == nil {
-		return "", fmt.Errorf("am_alloc function not found")
-	}
-
-	results, err = allocFn.Call(ctx, uint64(textLen))
-	if err != nil {
-		return "", fmt.Errorf("failed to allocate memory: %w", err)
-	}
-
-	ptr := uint32(results[0])
-	if ptr == 0 {
-		return "", fmt.Errorf("allocation failed")
-	}
-
-	defer func() {
-		freeFn := s.modInst.ExportedFunction("am_free")
-		if freeFn != nil {
-			freeFn.Call(ctx, uint64(ptr), uint64(textLen))
-		}
-	}()
-
-	// Get text
-	getTextFn := s.modInst.ExportedFunction("am_get_text")
-	if getTextFn == nil {
-		return "", fmt.Errorf("am_get_text function not found")
-	}
-
-	results, err = getTextFn.Call(ctx, uint64(ptr))
-	if err != nil {
-		return "", fmt.Errorf("failed to get text: %w", err)
-	}
-
-	if results[0] != 0 {
-		return "", fmt.Errorf("am_get_text returned error: %d", results[0])
-	}
-
-	// Read from memory
-	mem := s.modInst.Memory()
-	if mem == nil {
-		return "", fmt.Errorf("memory not found")
-	}
-
-	data, ok := mem.Read(ptr, textLen)
-	if !ok {
-		return "", fmt.Errorf("failed to read memory")
-	}
-
-	return string(data), nil
+	// Get text from root["content"] path
+	path := automerge.Root().Get("content")
+	return s.doc.GetText(ctx, path)
 }
 
 func (s *Server) setText(ctx context.Context, text string) error {
-	textBytes := []byte(text)
-	textLen := uint32(len(textBytes))
+	// This is a simple text replacement using SpliceText
+	// First get current length, then replace entire content
+	path := automerge.Root().Get("content")
 
-	// Allocate buffer
-	allocFn := s.modInst.ExportedFunction("am_alloc")
-	if allocFn == nil {
-		return fmt.Errorf("am_alloc function not found")
-	}
-
-	results, err := allocFn.Call(ctx, uint64(textLen))
+	currentLen, err := s.doc.TextLength(ctx, path)
 	if err != nil {
-		return fmt.Errorf("failed to allocate memory: %w", err)
+		return err
 	}
 
-	ptr := uint32(results[0])
-	if ptr == 0 {
-		return fmt.Errorf("allocation failed")
-	}
-
-	defer func() {
-		freeFn := s.modInst.ExportedFunction("am_free")
-		if freeFn != nil {
-			freeFn.Call(ctx, uint64(ptr), uint64(textLen))
-		}
-	}()
-
-	// Write to memory
-	mem := s.modInst.Memory()
-	if mem == nil {
-		return fmt.Errorf("memory not found")
-	}
-
-	if !mem.Write(ptr, textBytes) {
-		return fmt.Errorf("failed to write to memory")
-	}
-
-	// Set text
-	setTextFn := s.modInst.ExportedFunction("am_set_text")
-	if setTextFn == nil {
-		return fmt.Errorf("am_set_text function not found")
-	}
-
-	results, err = setTextFn.Call(ctx, uint64(ptr), uint64(textLen))
-	if err != nil {
-		return fmt.Errorf("failed to set text: %w", err)
-	}
-
-	if results[0] != 0 {
-		return fmt.Errorf("am_set_text returned error: %d", results[0])
+	// Delete all current text and insert new text (position 0, delete all, insert new)
+	if err := s.doc.SpliceText(ctx, path, 0, int(currentLen), text); err != nil {
+		return err
 	}
 
 	// Save snapshot
@@ -258,69 +124,10 @@ func (s *Server) setText(ctx context.Context, text string) error {
 }
 
 func (s *Server) saveDocument(ctx context.Context) error {
-	// Get save length
-	saveLenFn := s.modInst.ExportedFunction("am_save_len")
-	if saveLenFn == nil {
-		return fmt.Errorf("am_save_len function not found")
-	}
-
-	results, err := saveLenFn.Call(ctx)
+	// Save to bytes
+	data, err := s.doc.Save(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get save length: %w", err)
-	}
-
-	saveLen := uint32(results[0])
-	if saveLen == 0 {
-		return nil
-	}
-
-	// Allocate buffer
-	allocFn := s.modInst.ExportedFunction("am_alloc")
-	if allocFn == nil {
-		return fmt.Errorf("am_alloc function not found")
-	}
-
-	results, err = allocFn.Call(ctx, uint64(saveLen))
-	if err != nil {
-		return fmt.Errorf("failed to allocate memory: %w", err)
-	}
-
-	ptr := uint32(results[0])
-	if ptr == 0 {
-		return fmt.Errorf("allocation failed")
-	}
-
-	defer func() {
-		freeFn := s.modInst.ExportedFunction("am_free")
-		if freeFn != nil {
-			freeFn.Call(ctx, uint64(ptr), uint64(saveLen))
-		}
-	}()
-
-	// Save
-	saveFn := s.modInst.ExportedFunction("am_save")
-	if saveFn == nil {
-		return fmt.Errorf("am_save function not found")
-	}
-
-	results, err = saveFn.Call(ctx, uint64(ptr))
-	if err != nil {
-		return fmt.Errorf("failed to save: %w", err)
-	}
-
-	if results[0] != 0 {
-		return fmt.Errorf("am_save returned error: %d", results[0])
-	}
-
-	// Read from memory
-	mem := s.modInst.Memory()
-	if mem == nil {
-		return fmt.Errorf("memory not found")
-	}
-
-	data, ok := mem.Read(ptr, saveLen)
-	if !ok {
-		return fmt.Errorf("failed to read memory")
+		return err
 	}
 
 	// Construct snapshot path from storage directory
@@ -336,60 +143,6 @@ func (s *Server) saveDocument(ctx context.Context) error {
 	}
 
 	log.Printf("[%s] Saved document to %s (%d bytes)", userID, snapshotPath, len(data))
-	return nil
-}
-
-func (s *Server) loadDocument(ctx context.Context, data []byte) error {
-	dataLen := uint32(len(data))
-
-	// Allocate buffer
-	allocFn := s.modInst.ExportedFunction("am_alloc")
-	if allocFn == nil {
-		return fmt.Errorf("am_alloc function not found")
-	}
-
-	results, err := allocFn.Call(ctx, uint64(dataLen))
-	if err != nil {
-		return fmt.Errorf("failed to allocate memory: %w", err)
-	}
-
-	ptr := uint32(results[0])
-	if ptr == 0 {
-		return fmt.Errorf("allocation failed")
-	}
-
-	defer func() {
-		freeFn := s.modInst.ExportedFunction("am_free")
-		if freeFn != nil {
-			freeFn.Call(ctx, uint64(ptr), uint64(dataLen))
-		}
-	}()
-
-	// Write to memory
-	mem := s.modInst.Memory()
-	if mem == nil {
-		return fmt.Errorf("memory not found")
-	}
-
-	if !mem.Write(ptr, data) {
-		return fmt.Errorf("failed to write to memory")
-	}
-
-	// Load
-	loadFn := s.modInst.ExportedFunction("am_load")
-	if loadFn == nil {
-		return fmt.Errorf("am_load function not found")
-	}
-
-	results, err = loadFn.Call(ctx, uint64(ptr), uint64(dataLen))
-	if err != nil {
-		return fmt.Errorf("failed to load: %w", err)
-	}
-
-	if results[0] != 0 {
-		return fmt.Errorf("am_load returned error: %d", results[0])
-	}
-
 	return nil
 }
 
@@ -530,7 +283,7 @@ func (s *Server) handleDoc(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	s.mu.RLock()
-	data, err := s.saveDocumentToBytes(ctx)
+	data, err := s.doc.Save(ctx)
 	s.mu.RUnlock()
 
 	if err != nil {
@@ -567,8 +320,17 @@ func (s *Server) handleMerge(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("[%s] Received doc.am to merge (%d bytes)", userID, len(otherDoc))
 
+	// Load the other document
+	other, err := automerge.Load(ctx, otherDoc)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to load document to merge: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer other.Close(ctx)
+
+	// Merge it into our document
 	s.mu.Lock()
-	err = s.mergeDocument(ctx, otherDoc)
+	err = s.doc.Merge(ctx, other)
 	s.mu.Unlock()
 
 	if err != nil {
@@ -593,123 +355,4 @@ func (s *Server) handleMerge(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Merged successfully! New text: %s", text)
 	log.Printf("[%s] Merge complete, new text: %s", userID, text)
-}
-
-func (s *Server) saveDocumentToBytes(ctx context.Context) ([]byte, error) {
-	// Get save length
-	saveLenFn := s.modInst.ExportedFunction("am_save_len")
-	if saveLenFn == nil {
-		return nil, fmt.Errorf("am_save_len function not found")
-	}
-
-	results, err := saveLenFn.Call(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to call am_save_len: %w", err)
-	}
-
-	saveLen := results[0]
-	if saveLen == 0 {
-		return nil, fmt.Errorf("document is empty")
-	}
-
-	// Allocate memory
-	allocFn := s.modInst.ExportedFunction("am_alloc")
-	if allocFn == nil {
-		return nil, fmt.Errorf("am_alloc function not found")
-	}
-
-	results, err = allocFn.Call(ctx, uint64(saveLen))
-	if err != nil {
-		return nil, fmt.Errorf("failed to allocate memory: %w", err)
-	}
-
-	ptr := uint32(results[0])
-	if ptr == 0 {
-		return nil, fmt.Errorf("allocation failed")
-	}
-
-	// Save document
-	saveFn := s.modInst.ExportedFunction("am_save")
-	if saveFn == nil {
-		return nil, fmt.Errorf("am_save function not found")
-	}
-
-	results, err = saveFn.Call(ctx, uint64(ptr))
-	if err != nil {
-		return nil, fmt.Errorf("failed to save document: %w", err)
-	}
-
-	if results[0] != 0 {
-		return nil, fmt.Errorf("am_save returned error: %d", results[0])
-	}
-
-	// Read from memory
-	mem := s.modInst.Memory()
-	if mem == nil {
-		return nil, fmt.Errorf("memory not found")
-	}
-
-	data, ok := mem.Read(ptr, saveLen)
-	if !ok {
-		return nil, fmt.Errorf("failed to read memory")
-	}
-
-	// Free memory
-	freeFn := s.modInst.ExportedFunction("am_free")
-	if freeFn != nil {
-		freeFn.Call(ctx, uint64(ptr), uint64(saveLen))
-	}
-
-	return data, nil
-}
-
-func (s *Server) mergeDocument(ctx context.Context, otherDoc []byte) error {
-	// Allocate memory for the other document
-	allocFn := s.modInst.ExportedFunction("am_alloc")
-	if allocFn == nil {
-		return fmt.Errorf("am_alloc function not found")
-	}
-
-	results, err := allocFn.Call(ctx, uint64(len(otherDoc)))
-	if err != nil {
-		return fmt.Errorf("failed to allocate memory: %w", err)
-	}
-
-	ptr := uint32(results[0])
-	if ptr == 0 {
-		return fmt.Errorf("allocation failed")
-	}
-
-	// Write other document to memory
-	mem := s.modInst.Memory()
-	if mem == nil {
-		return fmt.Errorf("memory not found")
-	}
-
-	if !mem.Write(ptr, otherDoc) {
-		return fmt.Errorf("failed to write to memory")
-	}
-
-	// Call am_merge
-	mergeFn := s.modInst.ExportedFunction("am_merge")
-	if mergeFn == nil {
-		return fmt.Errorf("am_merge function not found")
-	}
-
-	results, err = mergeFn.Call(ctx, uint64(ptr), uint64(len(otherDoc)))
-	if err != nil {
-		return fmt.Errorf("failed to call am_merge: %w", err)
-	}
-
-	if results[0] != 0 {
-		return fmt.Errorf("am_merge returned error: %d", results[0])
-	}
-
-	// Free memory
-	freeFn := s.modInst.ExportedFunction("am_free")
-	if freeFn != nil {
-		freeFn.Call(ctx, uint64(ptr), uint64(len(otherDoc)))
-	}
-
-	return nil
 }

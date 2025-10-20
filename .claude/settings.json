@@ -1,0 +1,7 @@
+{
+  "allowedTools": [
+    "mcp__playwright__*"
+  ],
+  "ignorePatterns": [],
+  "env": {}
+}

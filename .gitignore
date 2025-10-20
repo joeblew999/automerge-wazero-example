@@ -46,3 +46,6 @@ package-lock.json
 
 # Test data
 go/cmd/server/data/
+
+# Playwright MCP (temp screenshots - copy to testdata/ or screenshots/ as needed)
+.playwright-mcp/
