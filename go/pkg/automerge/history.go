@@ -1,8 +1,11 @@
 package automerge
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
-// History and Time-Travel Operations - For Future Milestones
+// History and Time-Travel Operations
 //
 // Automerge preserves the complete history of all changes. You can query
 // the history, fork at specific points, and read historical values.
@@ -12,13 +15,27 @@ import "context"
 // Heads identify the current state of the document. After merging, a document
 // may have multiple heads temporarily until the next change.
 //
-// Status: ❌ Not implemented
+// Status: ✅ Implemented
 func (d *Document) GetHeads(ctx context.Context) ([]ChangeHash, error) {
-	return nil, &NotImplementedError{
-		Feature:   "GetHeads",
-		Milestone: "",
-		Message:   "Requires am_get_heads WASI export",
+	if d.runtime == nil {
+		return nil, fmt.Errorf("document not initialized")
 	}
+
+	heads, err := d.runtime.AmGetHeads(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get heads: %w", err)
+	}
+
+	// Convert [][]byte to []ChangeHash
+	result := make([]ChangeHash, len(heads))
+	for i, head := range heads {
+		if len(head) != 32 {
+			return nil, fmt.Errorf("invalid head size: expected 32 bytes, got %d", len(head))
+		}
+		copy(result[i][:], head)
+	}
+
+	return result, nil
 }
 
 // GetChanges returns all changes since the given dependencies.
@@ -26,13 +43,37 @@ func (d *Document) GetHeads(ctx context.Context) ([]ChangeHash, error) {
 // Used internally by the sync protocol. Useful for debugging or building
 // custom sync mechanisms.
 //
-// Status: ❌ Not implemented
-func (d *Document) GetChanges(ctx context.Context, have []ChangeHash) ([]Change, error) {
-	return nil, &NotImplementedError{
-		Feature:   "GetChanges",
-		Milestone: "",
-		Message:   "Requires am_get_changes WASI export",
+// Status: ✅ Implemented
+func (d *Document) GetChanges(ctx context.Context, have []ChangeHash) ([]byte, error) {
+	if d.runtime == nil {
+		return nil, fmt.Errorf("document not initialized")
 	}
+
+	// Convert ChangeHash to [][]byte
+	haveHeads := make([][]byte, len(have))
+	for i, hash := range have {
+		haveHeads[i] = hash[:]
+	}
+
+	changesBytes, err := d.runtime.AmGetChanges(ctx, haveHeads)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get changes: %w", err)
+	}
+
+	return changesBytes, nil
+}
+
+// ApplyChanges applies changes to the document
+//
+// This is used to apply changes received from another peer
+//
+// Status: ✅ Implemented
+func (d *Document) ApplyChanges(ctx context.Context, changes []byte) error {
+	if d.runtime == nil {
+		return fmt.Errorf("document not initialized")
+	}
+
+	return d.runtime.AmApplyChanges(ctx, changes)
 }
 
 // GetChangeByHash retrieves a specific change by its hash.

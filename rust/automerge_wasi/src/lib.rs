@@ -42,11 +42,9 @@ mod text;
 mod map;
 mod list;
 mod counter;
-
-// Future modules (M1, M2, M4)
-// mod counter;
-// mod sync;
-// mod richtext;
+mod history;
+mod sync;
+mod richtext;
 
 // Re-export all public FFI functions
 pub use memory::*;
@@ -55,3 +53,6 @@ pub use text::*;
 pub use map::*;
 pub use list::*;
 pub use counter::*;
+pub use history::*;
+pub use sync::*;
+pub use richtext::*;

@@ -1,27 +1,73 @@
 package automerge
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
-// Sync Protocol Operations - For M1 Milestone
+// Sync Protocol Operations - M1 Milestone
 //
 // The sync protocol enables efficient delta-based synchronization between
 // peers. Instead of sending the entire document, peers exchange only the
 // changes they don't have yet.
+
+// InitSyncState initializes the sync state for a new peer connection.
+//
+// Call this once before starting a sync session with a peer.
+// Returns a SyncState that must be used in subsequent sync calls.
+//
+// Status: ✅ Implemented
+func (d *Document) InitSyncState(ctx context.Context) (*SyncState, error) {
+	if d.runtime == nil {
+		return nil, fmt.Errorf("document not initialized")
+	}
+
+	peerID, err := d.runtime.AmSyncStateInit(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to init sync state: %w", err)
+	}
+
+	return &SyncState{peerID: peerID}, nil
+}
+
+// FreeSyncState frees the sync state for a peer connection.
+//
+// Call this when done with a sync session.
+//
+// Status: ✅ Implemented
+func (d *Document) FreeSyncState(ctx context.Context, state *SyncState) error {
+	if d.runtime == nil {
+		return fmt.Errorf("document not initialized")
+	}
+	if state == nil {
+		return fmt.Errorf("sync state is nil")
+	}
+
+	return d.runtime.AmSyncStateFree(ctx, state.peerID)
+}
 
 // GenerateSyncMessage generates a sync message to send to a peer.
 //
 // The sync state tracks what the peer has already seen, so we only send
 // changes they're missing.
 //
-// Returns nil if there's nothing to send.
+// Returns empty slice if there's nothing to send.
 //
-// Status: ❌ Not implemented (requires M1)
+// Status: ✅ Implemented
 func (d *Document) GenerateSyncMessage(ctx context.Context, state *SyncState) ([]byte, error) {
-	return nil, &NotImplementedError{
-		Feature:   "GenerateSyncMessage",
-		Milestone: "M1",
-		Message:   "Requires am_sync_gen WASI export",
+	if d.runtime == nil {
+		return nil, fmt.Errorf("document not initialized")
 	}
+	if state == nil {
+		return nil, fmt.Errorf("sync state is nil")
+	}
+
+	msg, err := d.runtime.AmSyncGen(ctx, state.peerID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate sync message: %w", err)
+	}
+
+	return msg, nil
 }
 
 // ReceiveSyncMessage processes a sync message from a peer.
@@ -30,33 +76,30 @@ func (d *Document) GenerateSyncMessage(ctx context.Context, state *SyncState) ([
 // After receiving a message, you should call GenerateSyncMessage to see if
 // we need to reply with our own changes.
 //
-// Status: ❌ Not implemented (requires M1)
+// Status: ✅ Implemented
 func (d *Document) ReceiveSyncMessage(ctx context.Context, state *SyncState, msg []byte) error {
-	return &NotImplementedError{
-		Feature:   "ReceiveSyncMessage",
-		Milestone: "M1",
-		Message:   "Requires am_sync_recv WASI export",
+	if d.runtime == nil {
+		return fmt.Errorf("document not initialized")
 	}
+	if state == nil {
+		return fmt.Errorf("sync state is nil")
+	}
+
+	return d.runtime.AmSyncRecv(ctx, state.peerID, msg)
 }
 
 // EncodeSyncMessage encodes a sync message for transmission.
 //
-// Status: ❌ Not implemented (requires M1)
+// Status: Not needed - sync messages are already encoded bytes
 func EncodeSyncMessage(msg []byte) ([]byte, error) {
-	return nil, &NotImplementedError{
-		Feature:   "EncodeSyncMessage",
-		Milestone: "M1",
-		Message:   "Requires am_sync_encode WASI export",
-	}
+	// Sync messages from am_sync_gen are already encoded
+	return msg, nil
 }
 
 // DecodeSyncMessage decodes a received sync message.
 //
-// Status: ❌ Not implemented (requires M1)
+// Status: Not needed - am_sync_recv handles decoding internally
 func DecodeSyncMessage(data []byte) ([]byte, error) {
-	return nil, &NotImplementedError{
-		Feature:   "DecodeSyncMessage",
-		Milestone: "M1",
-		Message:   "Requires am_sync_decode WASI export",
-	}
+	// Sync messages are passed directly to am_sync_recv
+	return data, nil
 }

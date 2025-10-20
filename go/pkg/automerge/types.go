@@ -224,11 +224,16 @@ type MarkSet []Mark
 // SyncState tracks synchronization state between peers
 // For M1 milestone
 type SyncState struct {
-	// Internal state - opaque for now
-	data []byte
+	// Peer ID from WASM runtime
+	peerID uint32
 }
 
 // NewSyncState creates a new sync state
 func NewSyncState() *SyncState {
 	return &SyncState{}
+}
+
+// PeerID returns the peer ID for this sync state
+func (s *SyncState) PeerID() uint32 {
+	return s.peerID
 }
