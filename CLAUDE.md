@@ -2,112 +2,59 @@
 
 > **Goal**: Run Automerge (Rust) as a **WASI** module hosted by **wazero** (Go), expose a minimal HTTP API + SSE for collaborative text editing, and provide a path to evolve toward **Automerge sync messages** and **NATS** transport.
 
-This document instructs automation agents (and humans) how to build, run, extend, and test the project. Follow tasks in order unless stated otherwise.
+This document provides **essential instructions** for AI agents. For detailed explanations, see **[Documentation Index](docs/README.md)**.
 
 ---
-
-NOTES for CLAUDE SETUP:
-
-Claude
-
-~/.claude.json
-
-/Users/apple/.local/bin/claude
-
-/Users/apple/.vscode/extensions/anthropic.claude-code-2.0.22-darwin-arm64/resources/native-binary/claude --dangerously-skip-permissions
-
-/Users/apple/.vscode/extensions/anthropic.claude-code-2.0.22-darwin-arm64/resources/native-binary/claude --help
-
-/Users/apple/.vscode/extensions/anthropic.claude-code-2.0.22-darwin-arm64/resources/native-binary/claude mcp list
-
-
 
 ## 0) Repository & Path Configuration
 
 **Repository**: `joeblew999/automerge-wazero-example`
+**URL**: https://github.com/joeblew999/automerge-wazero-example
 
-https://github.com/joeblew999/automerge-wazero-example
+### ⚠️ CRITICAL: File Path (3 nines!)
 
-### ⚠️ CRITICAL: File Path Requirements
-
-**CORRECT path** (3 nines in username):
 ```
 /Users/apple/workspace/go/src/github.com/joeblew999/automerge-wazero-example
 ```
 
-**INCORRECT path** (2 nines - DO NOT USE):
-```
-/Users/apple/workspace/go/src/github.com/joeblew99/automerge-wazero-example
-```
-
-Always use the **3-nines** version (`joeblew999`).
+Always use **`joeblew999`** (3 nines), not `joeblew99` (2 nines).
 
 ---
 
-## 0.1) Stack Dependencies & Source Code Management
+## 0.1) Stack Dependencies
 
 ### Automerge (Rust CRDT Library)
 
-**Primary**: https://github.com/automerge/automerge
+- **Source**: `.src/automerge/` (v0.7.0 reference, using v0.5 in production)
+- **Docs**: `.src/automerge.github.io/`
+- **Setup**: `make setup-src` to clone, `make update-src` to update
 
-**Version**: https://github.com/automerge/automerge/releases/tag/rust%2Fautomerge%400.7.0
+**AI Agent Documentation**:
+1. **[Automerge Guide](docs/ai-agents/automerge-guide.md)** - CRDT concepts, patterns, best practices
+2. **[API Mapping](docs/reference/api-mapping.md)** - Complete API coverage matrix
 
-**Docs**: https://github.com/automerge/automerge.github.io
+### Datastar (Go UI Framework) - M4
 
-**Requirements**:
-- ✅ MUST keep a copy of Automerge **source code** in `.src/automerge/`
-- ✅ MUST keep a copy of Automerge **docs** in `.src/automerge.github.io/`
-- ✅ MUST understand the source and docs to use Automerge correctly
-- ✅ Use `make setup-src` to clone, `make update-src` to update
-
-**AI Agent Documentation Files** (keep these updated):
-
-1. **[`docs/ai-agents/automerge-guide.md`](docs/ai-agents/automerge-guide.md)** - For AI to understand Automerge concepts, CRDT behavior, and usage patterns
-   - Purpose: High-level understanding of how Automerge works
-   - Audience: AI agents learning to use Automerge effectively
-   - Content: Concepts, best practices, common patterns
-
-2. **[`docs/reference/api-mapping.md`](docs/reference/api-mapping.md)** - Technical reference for Automerge API → WASI → Go mapping
-   - Purpose: Complete API coverage matrix and implementation status
-   - Audience: AI agents implementing features
-   - Content: Every Rust method, corresponding WASI export, Go wrapper, implementation status
-
-### Datastar (Go UI Framework)
-
-**Primary**: https://github.com/starfederation/datastar-go
-
-**Website**: https://data-star.dev
-
-**Requirements**:
-- ✅ MUST keep a copy of datastar-go in `.src/datastar-go/`
-- ✅ MUST understand the docs to use Datastar correctly
-
-**AI Agent Documentation File**:
-
-3. **[`docs/ai-agents/datastar-guide.md`](docs/ai-agents/datastar-guide.md)** - For AI to understand Datastar concepts and usage (TODO: create for M4)
-   - Purpose: High-level understanding of Datastar for UI work
-   - Audience: AI agents implementing UI features (M4+)
-   - Content: Datastar patterns, SSE integration, reactive updates
+- **Source**: `.src/datastar-go/`
+- **Guide**: [docs/ai-agents/datastar-guide.md](docs/ai-agents/datastar-guide.md) (placeholder for M4)
 
 ---
 
-## 0.2) 🔥 CODE SYNCHRONIZATION REQUIREMENTS 🔥
+## 0.2) 🔥 CODE SYNCHRONIZATION REQUIREMENTS
 
-**CRITICAL**: The codebase has **4 layers** that MUST stay synchronized:
+**CRITICAL**: 4-layer architecture - ALL layers must stay synchronized!
 
 ```
-Layer 1: Automerge Rust Core (in .src/automerge/)
+Layer 1: Automerge Rust Core (.src/automerge/)
            ↓
-Layer 2: WASI Exports (rust/automerge_wasi/src/*.rs)
+Layer 2: Rust WASI Exports (rust/automerge_wasi/src/<module>.rs)
            ↓
-Layer 3: Go FFI Wrappers (go/pkg/wazero/*.go - 1:1 mapping with Layer 2)
+Layer 3: Go FFI Wrappers (go/pkg/wazero/<module>.go - 1:1 with Layer 2)
            ↓
-Layer 4: Go High-Level API (go/pkg/automerge/*.go)
+Layer 4: Go High-Level API (go/pkg/automerge/<module>.go)
 ```
 
-### 🎯 File Organization: 1:1 Mapping ACHIEVED ✅
-
-**CRITICAL**: Rust and Go FFI files have **perfect 1:1 mapping** - matching filenames!
+### 🎯 Perfect 1:1 File Mapping (10/10) ✅
 
 | Rust Module | Go FFI Wrapper | Purpose |
 |-------------|----------------|---------|
@@ -122,23 +69,13 @@ Layer 4: Go High-Level API (go/pkg/automerge/*.go)
 | sync.rs     | sync.go        | Sync protocol |
 | richtext.rs | richtext.go    | Rich text marks |
 
-**Finding Code**: To find sync code:
-1. Rust WASI: `rust/automerge_wasi/src/sync.rs`
-2. Go FFI: `go/pkg/wazero/sync.go`
-3. Go API: `go/pkg/automerge/sync.go`
-4. Tests: `go/pkg/automerge/sync_test.go`
-
 ### When You Change Go Code → Update Rust
 
 **Rule**: Adding methods to `go/pkg/automerge/*.go` **REQUIRES**:
 
 1. ✅ Corresponding WASI export(s) in `rust/automerge_wasi/src/<module>.rs`
 2. ✅ FFI wrapper(s) in `go/pkg/wazero/<module>.go` (matching filename!)
-3. ✅ Update `docs/reference/api-mapping.md` with:
-   - New Rust Automerge method (if applicable)
-   - New WASI export signature
-   - New Go wrapper
-   - Implementation status (Implemented/Stub/Planned)
+3. ✅ Update `docs/reference/api-mapping.md` with coverage status
 4. ✅ Tests for the new functionality
 
 **Example Flow**:
@@ -159,368 +96,7 @@ Layer 4: Go High-Level API (go/pkg/automerge/*.go)
 3. ✅ Update `docs/reference/api-mapping.md`
 4. ✅ Tests
 
----
-
-## 0.3) 🔄 UPSTREAM SOURCE SYNCHRONIZATION 🔄
-
-**CRITICAL**: When Automerge upstream changes, we MUST update our code to stay in sync.
-
-### The 5-Layer Dependency Chain
-
-```
-Layer 0: Automerge Upstream (.src/automerge/) ← WATCH THIS!
-           ↓ (We track changes here)
-Layer 1: Our Rust WASI Wrapper (rust/automerge_wasi/src/*.rs)
-           ↓
-Layer 2: Go FFI Wrappers (go/pkg/wazero/*.go - 1:1 with Layer 1)
-           ↓
-Layer 3: Go High-Level API (go/pkg/automerge/*.go)
-           ↓
-Layer 4: Documentation (docs/reference/api-mapping.md, docs/ai-agents/automerge-guide.md)
-```
-
-### Version Tracking
-
-| Component | Current Version | Tracked Version | Gap |
-|-----------|----------------|-----------------|-----|
-| **Automerge Rust (in use)** | 0.5 | 0.7.0 | ⚠️ 2 versions behind |
-| **Automerge.js (tracked)** | N/A (not used) | 3.1.2 | Reference only |
-| **Our WASI exports** | 11 functions | 65 planned | 17% complete |
-
-**Gap Status**: We're using Automerge Rust 0.5 but tracking 0.7.0 source in `.src/automerge/`. Evaluate upgrade path before M2.
-
-### ⚠️ CRITICAL: Client vs Server Automerge Usage
-
-**Current State (M0)**: Server-side CRDT **ONLY**
-
-| Layer | Automerge Usage | Version | Status |
-|-------|----------------|---------|--------|
-| **Browser (ui/ui.html)** | ❌ NOT LOADED | N/A | Removed in commit fixing JS errors |
-| **Go Server (main.go)** | ✅ ACTIVE via WASM | Rust 0.5 | CRDT operations work |
-| **Rust WASI Module** | ✅ ACTIVE | Rust 0.5 | Exports am_* functions |
-
-**Why Removed from Browser**:
-- Attempted to load `@automerge/automerge@3.1.2` via CDN
-- **Error**: `TypeError: (void 0) is not a function` at WASM init
-- **Root Cause**: Browser WASM loading incompatibility
-- **Fix**: Removed import, all CRDT operations server-side only
-- **Result**: UI now works (SSE, character counter, buttons all fixed)
-
-**Version Alignment Requirements**:
-
-When we **re-add** client-side Automerge.js (M2):
-
-1. ✅ **Match tracked version**: Use `@automerge/automerge@3.1.2` (same as `.src/automerge/`)
-2. ✅ **Verify WASM loading**: Test in browser console before deploying
-3. ✅ **API alignment**: Ensure `Automerge.updateText()` exists in chosen version
-4. ✅ **Server compatibility**: Client sync messages must be compatible with Rust 0.5 server
-
-**Testing Client-Side Automerge.js** (before adding back):
-
-```bash
-# Test in browser console (manually)
-# Visit: https://esm.sh/@automerge/automerge@3.1.2
-# Check: Does it load without errors?
-# Check: Does window.Automerge.updateText exist?
-
-# Or test with simple HTML
-cat > /tmp/test-automerge.html <<'EOF'
-<script type="module">
-import * as Automerge from 'https://esm.sh/@automerge/automerge@3.1.2';
-console.log('Loaded:', Automerge);
-console.log('updateText exists:', typeof Automerge.updateText);
-let doc = Automerge.from({ text: "" });
-console.log('Doc created:', doc);
-</script>
-EOF
-open /tmp/test-automerge.html  # Check browser console
-```
-
-**Current Data Flow** (M0):
-
-```
-Browser → POST /api/text (full text) → Go Server → WASM am_text_splice() → CRDT
-                                          ↓
-Browser ← SSE /api/stream (full text) ← Broadcast ← CRDT state
-```
-
-**Future Data Flow** (M2):
-
-```
-Browser Automerge.updateText() → Sync Message → POST /api/sync → am_sync_recv()
-                                                                      ↓
-Browser ← SSE sync messages ← am_sync_gen() ← CRDT merge ← Server CRDT
-```
-
-### 🎯 Version Upgrade Strategy & Decision Tree
-
-**Current Intentional Split**:
-- **Production (Cargo.toml)**: `automerge = "0.5"` ← What we COMPILE and RUN
-- **Reference (.src/)**: `automerge@0.7.0` ← What we STUDY for future features
-- **Gap**: 2 minor versions (0.5 → 0.6 → 0.7)
-
-**Why This Works**:
-
-| Milestone | Version Strategy | Rationale |
-|-----------|-----------------|-----------|
-| **M0 (Current)** | ✅ Stay on 0.5 | Stable, proven, text CRDT working perfectly |
-| **M1 (Sync)** | 🤔 Research needed | Test if 0.5 sync works with Automerge.js 3.x |
-| **M2 (Client)** | ⚠️ May need 0.7 | Client/server version alignment critical |
-
-**Decision Tree for M1 (Sync Protocol)**:
-
-```
-Planning M1 Sync Implementation
-  │
-  ├─→ Step 1: Research sync compatibility
-  │     │
-  │     ├─→ Test: Can Automerge.js 3.1.2 sync with Rust 0.5?
-  │     │   └─→ YES: Stay on 0.5 for M1 (low risk)
-  │     │   └─→ NO: Evaluate 3.2.0 or upgrade to 0.7
-  │     │
-  │     └─→ Test: Can Automerge.js 3.2.0 sync with Rust 0.5?
-  │         └─→ YES: Use 3.2.0 client + 0.5 server
-  │         └─→ NO: Must upgrade server to 0.7 before M1
-  │
-  ├─→ Step 2: If upgrade needed
-  │     │
-  │     ├─→ Test all 11 WASI exports still work
-  │     ├─→ Re-run all Go tests (11/12 currently passing)
-  │     ├─→ Verify save/load/merge binary compatibility
-  │     └─→ Update API_MAPPING.md if API changed
-  │
-  └─→ Step 3: Document decision in CLAUDE.md
-```
-
-**Decision Tree for M2 (Client-Side CRDT)**:
-
-```
-Planning M2 Client Implementation
-  │
-  ├─→ Step 1: Test browser WASM loading
-  │     │
-  │     ├─→ Test: Does Automerge.js 3.1.2 work in browser?
-  │     │   └─→ YES: Use 3.1.2 (matches .src reference)
-  │     │   └─→ NO: Try 3.2.0+
-  │     │
-  │     └─→ Test: Does Automerge.js 3.2.0+ work in browser?
-  │         └─→ YES: Check server compatibility (may need 0.7)
-  │         └─→ NO: Use bundler approach (vite/webpack + WASM)
-  │
-  ├─→ Step 2: Verify sync compatibility
-  │     │
-  │     └─→ Test: Do client/server sync messages decode?
-  │         └─→ YES: Deploy with current versions
-  │         └─→ NO: Align versions (upgrade server to match client)
-  │
-  └─→ Step 3: If server upgrade needed
-        │
-        ├─→ Change Cargo.toml: automerge = "0.7"
-        ├─→ Run full test suite
-        ├─→ Verify binary snapshot compatibility
-        └─→ Update docs + API mapping
-```
-
-**Critical Compatibility Questions** (research before M1/M2):
-
-1. **Sync Protocol**:
-   - [ ] Can Automerge.js 3.1.2 sync messages decode in Rust 0.5?
-   - [ ] Can Automerge.js 3.2.0 sync messages decode in Rust 0.5?
-   - [ ] Are sync messages backward compatible (0.5 ↔ 0.7)?
-
-2. **Browser WASM**:
-   - [ ] Why did `@automerge/automerge@3.1.2` CDN fail? (TypeError)
-   - [ ] Does 3.2.0+ have better browser WASM support?
-   - [ ] Do we need a bundler (webpack/vite) instead of CDN?
-
-3. **API Stability**:
-   - [ ] Do our 11 WASI exports work unchanged in 0.7?
-   - [ ] Does `AutoCommit::new()` API change in 0.7?
-   - [ ] Does `updateText()` method signature change?
-
-**Upgrade Risk Mitigation Checklist**:
-
-If upgrading from 0.5 → 0.7:
-
-- [ ] ✅ Compare 0.5 vs 0.7 changelog (`.src/automerge/`)
-- [ ] ✅ Check for breaking changes in our 11 WASI exports
-- [ ] ✅ Test `am_init()`, `am_save()`, `am_load()` still work
-- [ ] ✅ Test `am_text_splice()` behavior unchanged
-- [ ] ✅ Test `am_merge()` with 0.5-created snapshots
-- [ ] ✅ Re-run all Go tests (11/12 passing)
-- [ ] ✅ Regenerate test data: `make generate-test-data`
-- [ ] ✅ Test backward compatibility with existing `doc.am` files
-- [ ] ✅ Update `API_MAPPING.md` if method signatures changed
-- [ ] ✅ Document migration in CLAUDE.md
-
-**Current Recommendation**:
-
-- **M0**: ✅ Stay on 0.5 (already working perfectly)
-- **M1**: 🔬 Research first → likely stay on 0.5
-- **M2**: 🧪 Test client versions → decide based on results
-
-**Strategy**: Conservative, research-driven, minimize risk
-
-### When `.src/automerge/` Changes → Update Our Code
-
-**Rule**: When you update `.src/automerge/` (via `git pull` or version bump), you MUST:
-
-#### Step 1: Check What Changed in JavaScript API
-
-```bash
-cd .src/automerge/javascript
-git diff v3.1.2..v3.2.0 src/implementation.ts | grep "^+export function"
-```
-
-**Action**: For each new function:
-1. Add stub to `go/pkg/automerge/<category>.go`
-2. Return `NotImplementedError("Function added in Automerge v3.2.0 - planned for milestone MX")`
-3. Update `docs/reference/api-mapping.md` coverage matrix
-
-#### Step 2: Check What Changed in Rust API
-
-```bash
-cd .src/automerge/rust/automerge
-git diff rust/automerge@0.7.0..rust/automerge@0.8.0 src/
-```
-
-**Action**: For each API change:
-1. Update `docs/ai-agents/automerge-guide.md` if concepts changed
-2. Update `docs/reference/api-mapping.md` "Complete Automerge Rust API Reference" section
-3. Add TODO comments in stubs: `// TODO: Automerge 0.8.0 changed signature to...`
-
-#### Step 3: Check What Changed in Documentation
-
-```bash
-cd .src/automerge.github.io
-git diff main..new-version content/docs/
-```
-
-**Action**:
-1. Update `docs/ai-agents/automerge-guide.md` with new concepts/best practices
-2. Update examples in comments if API usage changed
-
-### The 65-Function Contract
-
-**Discovery**: Automerge.js has **exactly 65 exported functions** (as of v3.1.2).
-
-**Our Go API**: Maintains **1:1 parity** with 65 methods (13 implemented, 52 stubs).
-
-**Rule When Upstream Adds Functions**:
-
-If Automerge.js v3.3.0 adds `splitDocument()`:
-1. ✅ Add `func (d *Document) SplitDocument() error { return NotImplementedError("...") }`
-2. ✅ Update count: 66 methods total (13 implemented, 53 stubs)
-3. ✅ Update `docs/reference/api-mapping.md` coverage: 11/66 = 16.7%
-4. ✅ Keep tracking the ratio
-
-### Function Count Verification (Run Regularly)
-
-**Check if we're still in sync**:
-
-```bash
-# JavaScript API count
-grep "^export function " .src/automerge/javascript/src/implementation.ts | wc -l
-# Expected: 65 (as of v3.1.2)
-
-# Our Go API count (should match!)
-grep "^func (" go/pkg/automerge/*.go | wc -l
-# Expected: 65
-
-# Implemented count
-grep -h "NotImplementedError\|DeprecatedError" go/pkg/automerge/*.go | wc -l
-# Current: 52 stubs → 13 implemented
-
-# WASI exports count
-grep "^pub extern \"C\" fn am_" rust/automerge_wasi/src/*.rs | wc -l
-# Current: 11 (M0 milestone)
-```
-
-**If counts don't match**: Upstream added functions! Follow Step 1 above.
-
-### When to Update `.src/automerge/`
-
-**Regular updates**:
-```bash
-cd .src/automerge
-git pull origin main  # Get latest changes
-
-# Check what changed
-git log --oneline --since="1 month ago" -- javascript/src/implementation.ts
-git log --oneline --since="1 month ago" -- rust/automerge/src/
-```
-
-**Before major milestones** (M1, M2):
-1. Update `.src/automerge/` to latest stable release
-2. Run function count verification (above)
-3. Update stubs for new functions
-4. Update `docs/reference/api-mapping.md` and `docs/ai-agents/automerge-guide.md`
-5. Document version gap in CLAUDE.md (this file)
-
-**Before Cargo.toml version bump**:
-```bash
-# We're upgrading from automerge 0.5 → 0.7
-# 1. Check breaking changes
-cd .src/automerge/rust/automerge
-git log rust/automerge@0.5.0..rust/automerge@0.7.0 | grep -i "breaking"
-
-# 2. Update our WASI wrapper for API changes
-# 3. Run all tests
-# 4. Update this section with new version numbers
-```
-
-### API Signature Tracking
-
-**Before implementing a stub**, verify the signature matches upstream:
-
-**Example: Implementing `GetHeads()`**
-
-1. **Check TypeScript signature**:
-```bash
-grep -A5 "export function getHeads" .src/automerge/javascript/src/implementation.ts
-# export function getHeads<T>(doc: Doc<T>): Heads
-```
-
-2. **Check Rust signature**:
-```bash
-rg "fn get_heads" .src/automerge/rust/automerge/src/
-# pub fn get_heads(&mut self) -> Vec<ChangeHash>
-```
-
-3. **Design WASI export to match**:
-```rust
-// rust/automerge_wasi/src/history.rs
-#[no_mangle]
-pub extern "C" fn am_get_heads_count() -> u32 { ... }
-
-#[no_mangle]
-pub extern "C" fn am_get_heads(ptr_out: *mut u8) -> i32 { ... }
-```
-
-4. **Design Go API to match TypeScript**:
-```go
-// go/pkg/automerge/history.go
-func (d *Document) GetHeads() ([]string, error) { ... }
-```
-
-**This ensures our API feels familiar to Automerge users!**
-
-### Why This Matters
-
-**Without upstream tracking**:
-- ❌ We won't know when Automerge adds features we need
-- ❌ Our stubs might not match real API signatures
-- ❌ Version upgrades could break unexpectedly
-- ❌ We'll miss bug fixes and improvements
-
-**With upstream tracking**:
-- ✅ Plan milestone features based on actual Automerge API
-- ✅ Stubs are accurate placeholders with correct signatures
-- ✅ Clear upgrade path when ready (0.5 → 0.7 → 0.8)
-- ✅ Can cherry-pick features we need
-- ✅ Stay compatible with Automerge ecosystem
-
-### Verification Checklist (Run After API Changes)
+### Verification Checklist
 
 After ANY changes to the API layer:
 
@@ -533,743 +109,279 @@ After ANY changes to the API layer:
 
 ---
 
-## 0.4) 📋 DOCUMENTATION PRINCIPLES - SINGLE SOURCE OF TRUTH
+## 0.3) 📋 DOCUMENTATION PRINCIPLES - SINGLE SOURCE OF TRUTH
 
-**CRITICAL**: After the 2025-10-20 documentation reorganization (Diátaxis framework), follow these principles to prevent documentation drift and broken links.
+**CRITICAL**: Follow these to prevent documentation drift and broken links.
 
-### Single Source of Truth (SSoT) Principle
-
-**Rule**: Each piece of information lives in **EXACTLY ONE** canonical location.
-
-**Why**: Prevents inconsistencies, reduces maintenance burden, eliminates broken links.
-
-**How**: Use links to reference, NEVER duplicate content.
-
-### Documentation Structure
+### Structure
 
 ```
 /
-├── README.md              # User-facing entry point (links to docs/)
-├── CLAUDE.md              # AI agent master instructions (links to docs/)
-├── TODO.md                # Active task tracking (links to docs/)
-└── docs/                  # ALL other documentation (organized by Diátaxis)
-    ├── README.md          # Master documentation index
-    ├── tutorials/         # Learning-oriented (step-by-step)
-    ├── how-to/            # Goal-oriented (recipes)
-    ├── reference/         # Information-oriented (lookup)
-    ├── explanation/       # Understanding-oriented (concepts)
-    ├── development/       # Developer workflow
-    ├── ai-agents/         # AI-specific guides
-    └── archive/           # Historical docs
+├── README.md           # User entry point
+├── CLAUDE.md           # AI agent instructions (this file)
+├── TODO.md             # Active task tracking
+└── docs/               # ALL other documentation (Diátaxis framework)
+    ├── README.md       # Documentation index
+    ├── tutorials/      # Learning-oriented
+    ├── how-to/         # Goal-oriented recipes
+    ├── reference/      # Information lookup
+    ├── explanation/    # Understanding concepts
+    ├── development/    # Developer workflow
+    ├── ai-agents/      # AI-specific guides
+    └── archive/        # Historical docs
 ```
 
-### Before Moving/Renaming Documentation Files
+See **[docs/README.md](docs/README.md)** for complete documentation index.
 
-**ALWAYS run these checks**:
+### Before Moving/Renaming Files
 
 ```bash
-# 1. Find ALL references to the file
+# 1. Find ALL references
 grep -r "FILENAME.md" . --include="*.md" --include="*.go" --include="*.rs"
 
-# 2. List all files that reference it
-rg -l "FILENAME.md" --type md --type go --type rust
+# 2. Move file
+git mv OLD.md NEW.md
 
-# 3. Preview what needs updating
-rg "FILENAME.md" --type md --type go --type rust -n
+# 3. Update ALL references
+# 4. Verify links work
+make verify-docs
+
+# 5. Commit together
+git commit -m "docs: move FILENAME.md"
 ```
-
-**Then**:
-1. Move/rename the file using `git mv` (preserves history)
-2. Update ALL references found in step 1-3
-3. Run `make verify-docs` to check for broken links
-4. Commit file move and reference updates together
 
 ### After Any Documentation Changes
 
 **ALWAYS run**:
-
 ```bash
 make verify-docs  # Checks for broken internal markdown links
 ```
 
-**This target**:
-- ✅ Scans all .md files (except node_modules, .src)
-- ✅ Detects broken internal links (relative paths)
-- ✅ Reports exactly which files have broken links
-- ❌ Exits with error if any broken links found
-
-**Add to your workflow**:
+**Workflow**:
 ```bash
-# Before committing documentation changes
+# Before committing docs
 make verify-docs && git add docs/ *.md && git commit
 ```
 
-### Naming Convention
-
-**Name files by PURPOSE, not content**:
-
-```
-❌ BAD:  AUTOMERGE_JS_VS_RUST_COMPARISON.md (describes content)
-✅ GOOD: docs/reference/automerge-comparison.md (describes purpose)
-
-❌ BAD:  MCP_PLAYWRIGHT_GUIDE.md (screams old structure)
-✅ GOOD: docs/development/mcp-playwright.md (clear location + purpose)
-
-❌ BAD:  API_MAPPING.MD (uppercase, vague location)
-✅ GOOD: docs/reference/api-mapping.md (lowercase, clear location)
-```
-
-### Cross-Referencing Rules
-
-1. **Use relative paths** from current file location:
-   ```markdown
-   # In docs/development/testing.md
-   See [API Mapping](../reference/api-mapping.md)
-
-   # In docs/ai-agents/automerge-guide.md
-   See [CLAUDE.md](../../CLAUDE.md)
-   ```
-
-2. **Use descriptive link text**:
-   ```markdown
-   ✅ GOOD: See [API Mapping](../reference/api-mapping.md) for coverage
-   ❌ BAD:  See [here](../reference/api-mapping.md)
-   ```
-
-3. **Verify link targets exist** before committing
-
-### Intentional Exceptions
-
-**CLAUDE.md** contains some duplicate content by design:
-- It's the **master instructions** for AI agents
-- Must be self-contained for quick reference
-- Links to docs/ for detailed information
-
-This is acceptable duplication because:
-1. CLAUDE.md is the entry point for AI agents
-2. Detailed docs are in docs/ (single source)
-3. CLAUDE.md links to docs/ for depth
-
-### Recovery: If You Find Broken Links
-
-1. **Don't panic** - run the audit:
-   ```bash
-   make verify-docs  # Shows exactly what's broken
-   ```
-
-2. **Fix systematically**:
-   - Update each broken link to correct relative path
-   - Test: `make verify-docs` should pass
-   - Commit fixes
-
-3. **Prevent recurrence**:
-   - Add to PR checklist: "Run `make verify-docs`"
-   - Consider pre-commit hook (optional)
-
 ---
 
-## 📝 RECENT CHANGES
+## 0.4) Testing Requirements
 
-### 2025-10-20: Refactoring - Split exports.go into Module Files ✅
+**NEVER ASSUME CODE WORKS!** All code MUST be tested.
 
-**Why**: Achieve 1:1 mapping with Rust modules for easier code tracking
-**Impact**: **Breaking change** for documentation references (old `exports.go` no longer exists)
+### Test Workflow
 
-**Before**:
-- Single `go/pkg/wazero/exports.go` (1,149 lines)
-- Hard to find specific functionality
-- Difficult to track which Go code maps to which Rust module
-
-**After**:
-- **10 separate files** matching Rust modules exactly
-- Easy navigation: sync code is in `sync.rs` → `sync.go`
-- Files are ~100-200 lines each (manageable size)
-- **Perfect 1:1 mapping achieved** ✅
-
-**File Mapping** (see section 0.2 for full table):
-```
-rust/automerge_wasi/src/sync.rs   →  go/pkg/wazero/sync.go
-rust/automerge_wasi/src/map.rs    →  go/pkg/wazero/map.go
-rust/automerge_wasi/src/text.rs   →  go/pkg/wazero/text.go
-... (10 files total)
-```
-
-**Migration**: Update any references:
-- ❌ Old: `go/pkg/wazero/exports.go`
-- ✅ New: `go/pkg/wazero/<module>.go` (e.g., `sync.go`, `map.go`)
-
-### 2025-10-20: Sync Protocol - Per-Peer State Implementation ✅
-
-**Why**: Fix incorrect global sync state to proper per-peer state (as Automerge requires)
-**Impact**: **API change** - `InitSyncState()` now returns `*SyncState` with peer_id
-
-**Before** (WRONG - Global State):
-```go
-doc.InitSyncState(ctx)  // Error: used global state (incorrect!)
-msg, _ := doc.GenerateSyncMessage(ctx, nil)
-```
-
-**After** (CORRECT - Per-Peer State):
-```go
-state, err := doc.InitSyncState(ctx)  // Returns peer-specific state
-defer doc.FreeSyncState(ctx, state)   // Clean up when done
-msg, _ := doc.GenerateSyncMessage(ctx, state)
-```
-
-**Rust Changes**:
-- `am_sync_state_init()` now returns `peer_id` (not error code)
-- Added `am_sync_state_free(peer_id)` for cleanup
-- All sync functions take `peer_id` parameter
-- Uses `HashMap<u32, sync::State>` instead of global `Option<sync::State>`
-
-**Tests**:
-- ✅ All 28 Rust tests passing (100%)
-- ✅ All 46 Go tests passing (100%)
-- ✅ No hacks or shortcuts - proper Automerge implementation
-
-**Why This Matters**: Each peer connection needs separate sync state to track what that specific peer has seen. The old global state approach would fail with multiple concurrent sync sessions.
-
-### 2025-10-20: Runtime Renamed to State ✅
-
-**Why**: Align Go `runtime.go` with Rust `state.rs` for 1:1 mapping
-**Impact**: Filename change only (internal to wazero package)
-
-**Change**:
-- ❌ Old: `go/pkg/wazero/runtime.go`
-- ✅ New: `go/pkg/wazero/state.go`
-
-**Reasoning**: Both files manage internal state (Rust: document state, Go: wazero runtime state), so "state" is more accurate and achieves perfect 10/10 file mapping.
-
----
-
-## 0.3) Testing Requirements
-
-**NEVER ASSUME CODE WORKS!**
-
-All code MUST be tested before declaring completion.
-
-### Test Tools & Requirements
-
-1. **Playwright MCP** - MUST use for end-to-end browser testing
-   - Test from the outside (user perspective)
-   - **Screenshot Workflow**:
-     - Playwright saves to `.playwright-mcp/testdata/screenshots/` (auto-created)
-     - Copy test screenshots to `testdata/screenshots/` (for test artifacts)
-     - Copy final screenshots to `screenshots/` (for README.md)
-     - Use `cp .playwright-mcp/testdata/screenshots/name.png screenshots/screenshot.png`
-   - Reference screenshots in `README.md` as `screenshots/screenshot.png`
-
-2. **Go Tests** - `go test -v ./...`
-   - Unit tests for each package
-   - Integration tests for WASM FFI
-   - Test data in `go/testdata/`
-
-3. **Rust Tests** - `cargo test`
-   - Unit tests in each module (`src/*.rs`)
-   - Test WASI exports work correctly
-
-### MCP Configuration for Testing
-
-#### Global MCP Server Setup
-
-**Location**: Playwright MCP must be configured in `~/.claude.json`
-
-Add to the global `mcpServers` section:
-```json
-"playwright": {
-  "type": "stdio",
-  "command": "npx",
-  "args": ["@playwright/mcp@latest"],
-  "env": {}
-}
-```
-
-**Verify MCP servers**:
 ```bash
-/Users/apple/.local/bin/claude mcp list
-# Should show: playwright: npx @playwright/mcp@latest - ✓ Connected
+# Build + test
+make build-wasi
+make test-go        # Must pass
+make test-rust      # Must pass
 ```
 
-#### Project-Level Auto-Approval (REQUIRED for autonomous testing)
+### End-to-End Testing (Playwright MCP)
 
-**Location**: `.claude/settings.json` (committed to repo)
+**REQUIRED** before marking features complete.
 
-**Complete Playwright MCP Tool List** (21 tools total):
-
-```json
-{
-  "allowedTools": [
-    "mcp__playwright__browser_close",
-    "mcp__playwright__browser_resize",
-    "mcp__playwright__browser_console_messages",
-    "mcp__playwright__browser_handle_dialog",
-    "mcp__playwright__browser_evaluate",
-    "mcp__playwright__browser_file_upload",
-    "mcp__playwright__browser_fill_form",
-    "mcp__playwright__browser_install",
-    "mcp__playwright__browser_press_key",
-    "mcp__playwright__browser_type",
-    "mcp__playwright__browser_navigate",
-    "mcp__playwright__browser_navigate_back",
-    "mcp__playwright__browser_network_requests",
-    "mcp__playwright__browser_take_screenshot",
-    "mcp__playwright__browser_snapshot",
-    "mcp__playwright__browser_click",
-    "mcp__playwright__browser_drag",
-    "mcp__playwright__browser_hover",
-    "mcp__playwright__browser_select_option",
-    "mcp__playwright__browser_tabs",
-    "mcp__playwright__browser_wait_for"
-  ]
-}
-```
-
-**Why**: This auto-approves all Playwright MCP tools so AI agents can run end-to-end tests WITHOUT user prompts. Critical for autonomous testing workflows.
-
-**Note**: The wildcard pattern `"mcp__playwright__*"` does NOT work for auto-approval. Each tool must be listed explicitly.
-
-**Verify**:
-```bash
-# Test that Playwright tools work without prompts
-# Agent should be able to call mcp__playwright__browser_navigate without asking
-```
-
-**Note**: If you have multiple Claude installations (standalone CLI + VSCode extension), they may use different configurations. The Playwright tools may not be available in the current session until Claude Code restarts to load the MCP server.
-
-### Files to Keep Updated
-
-- ✅ `Makefile` - All build and test targets
-- ✅ `README.md` - User-facing documentation, screenshots
-- ✅ `.gitignore` - Ignore build artifacts, keep test data
-- ✅ `TODO.md` - Current tasks, completed work, next steps
-  - **CRITICAL**: Keep TODO.md and code in sync!
+See **[Testing Guide](docs/development/testing.md)** for:
+- Unit test strategies
+- Integration test patterns
+- Playwright MCP usage
+- Test data generation
 
 ---
 
-## 0.4) Branching Strategy
-
-* `main` — stable, protected
-* `dev/*` — feature branches, merge via PR
-
----
-
-## 0.5) Primary File Paths
+## 0.5) Primary File Paths (Quick Reference)
 
 ```
-/Makefile                              # Build automation
+/Makefile                              # Build automation + verify-docs
 /README.md                             # User documentation
-/TODO.md                               # Task tracking (MUST keep updated!)
+/TODO.md                               # Task tracking
 /docs/reference/api-mapping.md         # API coverage matrix
 /docs/ai-agents/automerge-guide.md     # AI: Automerge concepts
-/docs/ai-agents/datastar-guide.md      # AI: Datastar concepts (TODO: create for M4)
+/docs/development/testing.md           # Testing guide
+/docs/development/roadmap.md           # Milestones M0-M5
+/docs/explanation/architecture.md      # 4-layer architecture deep dive
 /ui/ui.html                            # Browser UI
-/go/cmd/server/main.go                 # HTTP server (should be slim!)
+/go/cmd/server/main.go                 # HTTP server
 /go/pkg/automerge/*.go                 # High-level Go API
-/go/pkg/wazero/*.go                    # Low-level FFI wrappers
+/go/pkg/wazero/*.go                    # Low-level FFI wrappers (1:1 with Rust)
+/go/testdata/                          # All test data (unit/integration/e2e)
 /rust/automerge_wasi/Cargo.toml        # Rust WASI crate config
 /rust/automerge_wasi/src/lib.rs        # Module orchestrator
-/rust/automerge_wasi/src/memory.rs     # Memory management
-/rust/automerge_wasi/src/document.rs   # Document lifecycle
-/rust/automerge_wasi/src/text.rs       # Text CRDT operations
+/rust/automerge_wasi/src/*.rs          # WASI modules (1:1 with Go)
 /.src/automerge/                       # Automerge source (reference)
-/.src/automerge.github.io/             # Automerge docs (reference)
-/.src/datastar-go/                     # Datastar source (reference)
 ```
 
 ---
 
 ## 1) Environment & Prerequisites
 
-* **Rust** (stable): `rustup` installed
-* **Targets**:
-  * Currently using: `wasm32-wasip1` (Rust 1.84+)
-  * Legacy: `wasm32-wasi` (pre-1.84)
-  * Target configured in `Makefile`
-* **Go**: 1.21+
-* **Make**
+- **Rust** (stable): `rustup` installed
+- **Target**: `wasm32-wasip1` (Rust 1.84+)
+- **Go**: 1.21+
+- **Make**
 
-### Local Bootstrap
+### Quick Start
 
 ```bash
-make build-wasi   # builds rust → WASI .wasm
-make run          # runs Go server with wazero
-# open http://localhost:8080
+make build-wasi   # Build Rust → WASI .wasm
+make run          # Run Go server with wazero
+# Open http://localhost:8080
 ```
-
-**Build Artifacts**:
-
-* `rust/automerge_wasi/target/wasm32-wasip1/release/automerge_wasi.wasm` (~559KB)
-* `doc.am` - Snapshot persisted in repo root (for demo)
 
 ---
 
-## 2) Architecture (High-Level)
+## 2) Architecture Quick Reference
 
-### Four-Layer Architecture
+**4-Layer Design**: See full details in **[Architecture Guide](docs/explanation/architecture.md)**
 
 ```
-┌─────────────────────────────────────────┐
-│  User (Browser)                         │
-│  ui/ui.html                             │
-└──────────────────┬──────────────────────┘
-                   │ HTTP/SSE
-┌──────────────────▼──────────────────────┐
-│  Go Server (wazero host)                │
-│  go/cmd/server/main.go                  │
-│  - HTTP endpoints                       │
-│  - SSE broadcasting                     │
-│  - Document persistence                 │
-└──────────────────┬──────────────────────┘
-                   │ High-level API
-┌──────────────────▼──────────────────────┐
-│  Go API Layer (pkg/automerge)           │
-│  - Document, Text, Map, List, etc.      │
-│  - Type-safe, idiomatic Go              │
-└──────────────────┬──────────────────────┘
-                   │ FFI calls
-┌──────────────────▼──────────────────────┐
-│  Go FFI Layer (pkg/wazero)              │
-│  - 1:1 WASI export wrappers             │
-│  - Memory management                    │
-└──────────────────┬──────────────────────┘
-                   │ WASM calls
-┌──────────────────▼──────────────────────┐
-│  Rust WASI Layer (automerge_wasi)       │
-│  - WASI exports (am_*)                  │
-│  - Modules: memory, document, text      │
-└──────────────────┬──────────────────────┘
-                   │ Rust API calls
-┌──────────────────▼──────────────────────┐
-│  Automerge Rust Core                    │
-│  - AutoCommit, ReadDoc, Transactable    │
-│  - CRDT magic                           │
-└─────────────────────────────────────────┘
+Browser (ui/ui.html)
+    ↓ HTTP/SSE
+Go Server (main.go) + wazero runtime
+    ↓ FFI calls
+Go FFI Layer (pkg/wazero/*.go)
+    ↓ WASM calls
+Rust WASI Layer (automerge_wasi/src/*.rs)
+    ↓ Rust API
+Automerge Core (CRDT magic)
 ```
 
-### Component Details
-
-* **Rust crate (`automerge_wasi`)**
-  * Wraps Automerge core (`automerge` crate)
-  * Exposes C-like ABI over WASI
-  * Modular structure: memory, document, text, (future: map, list, sync)
-  * Exports: `am_alloc`, `am_free`, `am_init`, `am_text_splice`, `am_save`, `am_load`, `am_merge`
-
-* **Go server (wazero host)**
-  * Instantiates WASI module
-  * Holds one in-memory document (demo; M3 will support multi-doc)
-  * HTTP endpoints: `GET /api/text`, `POST /api/text`, `GET /api/doc`, `POST /api/merge`
-  * SSE at `GET /api/stream` for broadcasting updates
-  * Persists `doc.am` and reloads on startup
-
-* **UI**
-  * `ui/ui.html`: textarea + SSE listener + Save button
-  * Future (M4): Datastar-powered reactive UI
+**Key Points**:
+- Rust compiled to WASM (`wasm32-wasip1`)
+- Go loads WASM via wazero
+- HTTP + SSE for browser communication
+- Binary `.am` snapshots for persistence
 
 ---
 
-## 3) Tasks for Agents
+## 3) Exported WASI ABI (Current - M0)
 
-### T1 — Ensure Repository Skeleton ✅ DONE
+See **[API Mapping](docs/reference/api-mapping.md)** for complete API coverage.
 
-* [x] `Makefile`, `README.md`, `ui/ui.html`, `go/cmd/server/main.go`
-* [x] `rust/automerge_wasi/{Cargo.toml, src/lib.rs}`
-* [x] `go.mod` with `github.com/tetratelabs/wazero`
-* [x] Compile & run: `make build-wasi && make run`
+### Current Exports (11 functions)
 
-### T2 — Developer DX ✅ DONE
-
-* [x] `make tidy` (runs `go mod tidy`)
-* [x] `make test-go`, `make test-rust`
-* [x] `make generate-test-data`
-* [ ] Optional: file-watcher for hot-reload (e.g., `reflex`, `watchexec`)
-
-### T3 — Quality Gates
-
-* [ ] GitHub Actions CI: build WASI + Go server
-* [ ] Lint: `golangci-lint` (Go), `cargo clippy` (Rust)
-
-### T4 — Error Handling & Logging ✅ DONE
-
-* [x] Map negative return codes in Rust to HTTP 4xx/5xx in Go
-* [x] Error types: `NotImplementedError`, `DeprecatedError`, `WASMError`
-* [x] Structured logging in Go (using std log)
-
-### T5 — Persistence Policy ✅ DONE
-
-* [x] Keep latest snapshot `doc.am`
-* [ ] (Optional) Periodic snapshots + rotation
-
----
-
-## 4) Exported WASI ABI (Current - M0)
-
-### Memory Management
-
-* `am_alloc(size: usize) -> *mut u8` — Allocate buffer in WASM memory
-* `am_free(ptr: *mut u8, size: usize)` — Free allocated buffer
-
-### Document Lifecycle
-
-* `am_init() -> i32` — Initialize new document with Text at ROOT["content"]
-* `am_save_len() -> u32` — Get serialized document size
-* `am_save(ptr_out: *mut u8) -> i32` — Save document to buffer
-* `am_load(ptr: *const u8, len: usize) -> i32` — Load document from buffer
-* `am_merge(other_ptr: *const u8, other_len: usize) -> i32` — Merge documents
-
-### Text Operations
-
-* `am_text_splice(pos: usize, del: i64, insert_ptr: *const u8, insert_len: usize) -> i32` — CRDT text splice
-* `am_set_text(ptr: *const u8, len: usize) -> i32` — Replace entire text (DEPRECATED)
-* `am_get_text_len() -> u32` — Get text length in bytes
-* `am_get_text(ptr_out: *mut u8) -> i32` — Copy text to buffer
+**Memory**: `am_alloc`, `am_free`
+**Document**: `am_init`, `am_save`, `am_save_len`, `am_load`, `am_merge`
+**Text**: `am_text_splice`, `am_set_text` (deprecated), `am_get_text`, `am_get_text_len`
 
 **Return codes**: `0` = success; `<0` = error code
 
-**Module Structure** (rust/automerge_wasi/src/):
-- `lib.rs` - Module orchestration
-- `memory.rs` - `am_alloc`, `am_free`
-- `document.rs` - `am_init`, `am_save`, `am_load`, `am_merge`
-- `text.rs` - `am_text_splice`, `am_get_text`, etc.
-- `state.rs` - Global document state management
+---
+
+## 4) HTTP API (Demo)
+
+**Current endpoints**:
+- `GET /` - Serve UI
+- `GET /api/text` - Get current text
+- `POST /api/text` - Update text (JSON: `{"text": "..."}`)
+- `GET /api/stream` - SSE (events: `snapshot`, `update`)
+- `GET /api/doc` - Download `.am` snapshot
+- `POST /api/merge` - Merge another `.am` (CRDT merge)
 
 ---
 
-## 5) HTTP API (Demo)
+## 5) Roadmap / Next Milestones
 
-* `GET /api/text` → `200 text/plain` returns current text
-* `POST /api/text` `{"text": string}` → `204 No Content`; broadcasts SSE `update`
-* `GET /api/stream` → SSE with events:
-  * `snapshot` on connect: `{ "text": string }`
-  * `update` on edits: `{ "text": string }`
-* `GET /api/doc` → Download `doc.am` snapshot
-* `POST /api/merge` → Merge another `doc.am` (CRDT merge)
-* `GET /` → Serve `ui/ui.html`
+See **[Development Roadmap](docs/development/roadmap.md)** for complete details.
 
----
+### Current: M0 Complete ✅
+- Text CRDT implementation
+- HTTP API + SSE broadcasting
+- Binary persistence (`.am` format)
+- CRDT merge capability
 
-## 6) Roadmap / Next Milestones
+### Next: M1 — Automerge Sync Protocol
+- Per-peer sync state
+- Delta-based sync (not whole text)
+- `am_sync_gen`, `am_sync_recv` exports
 
-### M1 — **Automerge Sync Protocol** (delta-based)
-
-**Why**: Avoid shipping whole text; support true peer-to-peer sync.
-
-**Add to Rust** (`rust/automerge_wasi/src/sync.rs`):
-
-* [ ] `am_sync_init_peer(peer_id_ptr, len) -> i32`
-* [ ] `am_sync_gen_len() -> u32`
-* [ ] `am_sync_gen(ptr_out: *mut u8) -> i32`
-* [ ] `am_sync_recv(ptr: *const u8, len: usize) -> i32`
-
-**Update Go**:
-
-* [ ] On local edit, call `am_sync_gen` and broadcast bytes (SSE or NATS)
-* [ ] On receive, call `am_sync_recv` then maybe `am_sync_gen` (Automerge may request reply)
-* [ ] Add `/api/sync` SSE channel or reuse `/api/stream` with `event: sync`
-
-**Update Documentation**:
-
-* [ ] Add M1 exports to `docs/reference/api-mapping.md`
-* [ ] Update `docs/ai-agents/automerge-guide.md` with sync protocol concepts
-
-### M2 — **Multi-Object Support** (Maps, Lists, Counters)
-
-**Why**: Support full Automerge data model (not just single text field).
-
-**Add to Rust**:
-
-* [ ] `rust/automerge_wasi/src/map.rs`:
-  * `am_get(path_ptr, path_len, key_ptr, key_len, value_out_ptr) -> i32`
-  * `am_put(path_ptr, path_len, key_ptr, key_len, value_ptr, value_len) -> i32`
-  * `am_delete(path_ptr, path_len, key_ptr, key_len) -> i32`
-  * `am_keys(path_ptr, path_len, keys_out_ptr) -> i32`
-
-* [ ] `rust/automerge_wasi/src/list.rs`:
-  * `am_insert(path_ptr, path_len, index: u32, value_ptr, value_len) -> i32`
-  * `am_remove(path_ptr, path_len, index: u32) -> i32`
-  * `am_splice_list(path_ptr, path_len, pos: u32, del: i64, values_ptr, values_len) -> i32`
-
-* [ ] `rust/automerge_wasi/src/counter.rs`:
-  * `am_increment(path_ptr, path_len, key_ptr, key_len, delta: i64) -> i32`
-
-**Update Go**:
-
-* [x] Implement `pkg/automerge/map.go` ✅ DONE
-* [x] Implement `pkg/automerge/list.go` ✅ DONE
-* [x] Implement `pkg/automerge/counter.go` ✅ DONE
-* [x] FFI wrappers in `pkg/wazero/<module>.go` (map.go, list.go, counter.go) ✅ DONE
-
-**Multi-Document Support**:
-
-* [ ] Replace single `DOC` with map keyed by `docId`
-* [ ] Expose `am_select(doc_id_ptr, len)` / `am_new_doc(doc_id_ptr, len)`
-* [ ] Query param `?doc=<id>` on HTTP routes
-* [ ] Snapshot files `data/<docId>.am`
-
-### M3 — **NATS Transport**
-
-**Why**: Production-ready pub/sub, object storage, multi-tenant.
-
-* [ ] Subjects: `automerge.sync.<tenant>.<docId>`
-* [ ] Server acts as peer: on msg → `am_sync_recv` → maybe `am_sync_gen`
-* [ ] Store snapshots in **NATS Object Store**
-* [ ] Latest head in KV per `docId`
-* [ ] RBAC via JWT; namespace subjects per tenant/region
-
-### M4 — **Datastar UI** (Reactive Frontend)
-
-**Why**: Modern reactive UI without complex JS frameworks.
-
-* [ ] Browser: minimal JS streaming sync messages via SSE
-* [ ] Datastar "action" hooks to send local ops
-* [ ] Apply remote updates reactively
-* [ ] Reference `docs/ai-agents/datastar-guide.md` for implementation (create this doc in M4)
-* [ ] Optional WASM-Go frontends calling HTTP or NATS
-
-### M5 — **Observability & Ops**
-
-* [ ] Metrics: flush counts, message sizes, per-doc peers
-* [ ] Tracing hooks around sync cycles
-* [ ] Config flags for runtime paths and limits
+### Future: M2-M5
+- **M2**: Multi-object (Maps, Lists, Counters)
+- **M3**: NATS Transport
+- **M4**: Datastar UI (reactive frontend)
+- **M5**: Observability & Ops
 
 ---
 
-## 7) Conventions & Guardrails
-
-**Commits**: Conventional Commits (`feat:`, `fix:`, `chore:`, etc.)
-
-**PRs**: Small, reviewed, CI green. Include:
-* Scope, rationale
-* Testing notes
-* Backward-compatibility considerations
+## 6) Conventions & Guardrails
 
 **Code Style**:
-* Go: `gofmt` / `go vet`
-* Rust: `cargo fmt` / `cargo clippy`
+- Go: `gofmt` / `go vet`
+- Rust: `cargo fmt` / `cargo clippy`
+
+**Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
+
+**PRs**: Small, reviewed, CI green. Include scope, rationale, testing notes.
 
 **Security**:
-* Validate payload sizes; cap `am_alloc` usage
-* UTF-8 validation (already done in Rust)
-* Add content-length bounds in HTTP
-
-**Performance**:
-* Single module instance OK for demo
-* Production: consider per-doc sharding or doc pool
-* Avoid excessive `alloc/free`; measure with pprof
+- Validate payload sizes
+- Cap `am_alloc` usage
+- UTF-8 validation (done in Rust)
 
 ---
 
-## 8) Testing Plan
-
-### Unit Tests
-
-**Rust** (`cargo test`):
-* Construct doc, set text, save/load, compare
-* Each module has its own tests
-* See `src/memory.rs`, `src/document.rs`, `src/text.rs`
-
-**Go** (`go test -v ./...`):
-* Package tests in `pkg/automerge/*_test.go`
-* In-memory server tests (future)
-* Current: 11/12 tests passing (1 skipped for merge investigation)
-
-### Integration Tests
-
-* Start server → connect two SSE clients → POST update → assert second client receives `update`
-* Test data in `go/testdata/snapshots/`
-
-### End-to-End Tests (Playwright MCP)
-
-**REQUIRED** before marking features complete. Test from browser perspective and capture screenshots for README.md.
-
-**Workflow**:
-
-```bash
-# 1. Start server
-make run  # or in background
-
-# 2. Use Playwright MCP tools (available in Claude Code session)
-# Example test flow:
-# - mcp__playwright__browser_navigate(url: "http://localhost:8080")
-# - mcp__playwright__browser_snapshot() # Verify page loaded
-# - mcp__playwright__browser_click(element: "textarea", ref: "...")
-# - mcp__playwright__browser_type(text: "Test CRDT sync", ref: "...")
-# - mcp__playwright__browser_click(element: "Save Changes", ref: "...")
-# - mcp__playwright__browser_take_screenshot(filename: "testdata/screenshots/test-save.png")
-# - mcp__playwright__browser_close()
-
-# 3. Copy screenshots to appropriate folders
-# For test artifacts:
-cp .playwright-mcp/testdata/screenshots/*.png testdata/screenshots/
-
-# For README.md (pick the best screenshot):
-cp .playwright-mcp/testdata/screenshots/best-shot.png screenshots/screenshot.png
-
-# 4. Update README.md if screenshot changed significantly
-```
-
-**Test Checklist**:
-- [ ] Page loads without errors
-- [ ] SSE connects (status badge shows "Connected" in green)
-- [ ] Typing updates character counter
-- [ ] Save button persists changes (verify with `/api/text`)
-- [ ] Clear button clears textarea
-- [ ] Screenshot captures working state
-- [ ] Screenshot copied to `screenshots/` for README
-
-### CLI Smoke Tests
-
-```bash
-curl -s http://localhost:8080/api/text
-curl -s -X POST http://localhost:8080/api/text \
-  -H 'content-type: application/json' \
-  -d '{"text":"Hello"}' -i
-curl -s http://localhost:8080/api/stream  # observe snapshot + updates
-```
-
----
-
-## 9) Future Extensions (Optional)
-
-* CRDT rich text or multiple fields (not just `content`)
-* Heads/hash exposure for time travel
-* Snapshot compaction/GC strategy
-* E2E encryption of sync messages (application layer)
-* Rollups to object store per interval
-
----
-
-## 10) Quick Checklist (Copy/Paste for PRs)
+## 7) Quick Checklist (Copy/Paste for PRs)
 
 ```markdown
 - [ ] Builds: `make build-wasi` ✅
 - [ ] Tests: `make test-go` ✅
 - [ ] Tests: `make test-rust` ✅
 - [ ] Runs: `make run` → `GET /api/text` works ✅
-- [ ] SSE: two tabs receive `snapshot`/`update` ✅
-- [ ] Snapshot persists and reloads ✅
+- [ ] SSE: two tabs receive updates ✅
 - [ ] Updated: `docs/reference/api-mapping.md` ✅
 - [ ] Updated: `TODO.md` ✅
-- [ ] Updated: `README.md` (if needed) ✅
-- [ ] Playwright tests pass ✅
+- [ ] Verified: `make verify-docs` ✅
 - [ ] CI green ✅
 ```
 
 ---
 
-## 11) Known Issues & Investigations
+## 📝 RECENT CHANGES
 
-### CRDT Merge Behavior
+### 2025-10-20: Test Data Consolidation ✅
 
-**Status**: Needs investigation
+Consolidated all test data under `go/testdata/` with clear structure:
+- `unit/` - Go package tests (snapshots, scripts)
+- `integration/` - Bash integration tests
+- `e2e/` - Playwright screenshots
 
-**Issue**: `am_merge` currently only preserves one document's changes instead of merging both concurrent edits.
+### 2025-10-20: Documentation Reorganization ✅
 
-**Test**: `TestDocument_Merge` (currently skipped)
+Applied Diátaxis framework:
+- Moved 10 files from root → `docs/`
+- Created organized structure (tutorials, how-to, reference, explanation, development, ai-agents, archive)
+- Added `make verify-docs` to catch broken links
+- Fixed 13 broken internal links
 
-**Next Steps**:
-1. Investigate Automerge 0.5 `merge()` vs `apply_changes()` APIs
-2. Test with simple concurrent edits at different positions
-3. Verify merge commutativity
+### 2025-10-20: Refactoring - Split exports.go ✅
+
+Achieved perfect 10/10 file mapping between Rust and Go:
+- Split `go/pkg/wazero/exports.go` (1,149 lines) → 10 module files
+- Each file matches corresponding Rust module exactly
+- `runtime.go` → `state.go` to align with `state.rs`
+
+### 2025-10-20: Sync Protocol - Per-Peer State ✅
+
+Fixed incorrect global sync state:
+- Changed to proper per-peer state (as Automerge requires)
+- `InitSyncState()` now returns `*SyncState` with peer_id
+- Added `FreeSyncState()` for cleanup
+
+---
+
+## 📚 Detailed Documentation
+
+For comprehensive guides, see:
+
+- **[Documentation Index](docs/README.md)** - Master index of all documentation
+- **[Architecture Guide](docs/explanation/architecture.md)** - Complete 4-layer design
+- **[API Mapping](docs/reference/api-mapping.md)** - Full API coverage matrix
+- **[Testing Guide](docs/development/testing.md)** - Unit, integration, E2E testing
+- **[Automerge Guide](docs/ai-agents/automerge-guide.md)** - CRDT concepts for AI agents
+- **[Roadmap](docs/development/roadmap.md)** - Milestones M0-M5 detailed plans
+- **[How-To: Add WASI Export](docs/how-to/add-wasi-export.md)** - Step-by-step guide
+- **[How-To: Debug WASM](docs/how-to/debug-wasm.md)** - Troubleshooting workflow
 
 ---
 
