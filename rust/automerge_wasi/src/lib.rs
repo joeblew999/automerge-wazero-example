@@ -35,6 +35,14 @@
 //! - M3: Multi-document support
 //! - M4: Rich text formatting
 
+// FFI-specific lint allows
+// These are intentional for C ABI compatibility
+#![allow(clippy::not_unsafe_ptr_arg_deref)] // FFI functions take raw pointers by design
+#![allow(clippy::missing_const_for_thread_local)] // thread_local requires runtime initialization
+#![allow(clippy::manual_unwrap_or)] // Match expressions are clearer for error codes
+#![allow(clippy::collapsible_if)] // Separate conditionals for clarity
+#![allow(clippy::uninlined_format_args)] // Explicit format args in tests for clarity
+
 mod memory;
 mod state;
 mod document;
