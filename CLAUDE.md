@@ -229,6 +229,115 @@ Browser Automerge.updateText() → Sync Message → POST /api/sync → am_sync_r
 Browser ← SSE sync messages ← am_sync_gen() ← CRDT merge ← Server CRDT
 ```
 
+### 🎯 Version Upgrade Strategy & Decision Tree
+
+**Current Intentional Split**:
+- **Production (Cargo.toml)**: `automerge = "0.5"` ← What we COMPILE and RUN
+- **Reference (.src/)**: `automerge@0.7.0` ← What we STUDY for future features
+- **Gap**: 2 minor versions (0.5 → 0.6 → 0.7)
+
+**Why This Works**:
+
+| Milestone | Version Strategy | Rationale |
+|-----------|-----------------|-----------|
+| **M0 (Current)** | ✅ Stay on 0.5 | Stable, proven, text CRDT working perfectly |
+| **M1 (Sync)** | 🤔 Research needed | Test if 0.5 sync works with Automerge.js 3.x |
+| **M2 (Client)** | ⚠️ May need 0.7 | Client/server version alignment critical |
+
+**Decision Tree for M1 (Sync Protocol)**:
+
+```
+Planning M1 Sync Implementation
+  │
+  ├─→ Step 1: Research sync compatibility
+  │     │
+  │     ├─→ Test: Can Automerge.js 3.1.2 sync with Rust 0.5?
+  │     │   └─→ YES: Stay on 0.5 for M1 (low risk)
+  │     │   └─→ NO: Evaluate 3.2.0 or upgrade to 0.7
+  │     │
+  │     └─→ Test: Can Automerge.js 3.2.0 sync with Rust 0.5?
+  │         └─→ YES: Use 3.2.0 client + 0.5 server
+  │         └─→ NO: Must upgrade server to 0.7 before M1
+  │
+  ├─→ Step 2: If upgrade needed
+  │     │
+  │     ├─→ Test all 11 WASI exports still work
+  │     ├─→ Re-run all Go tests (11/12 currently passing)
+  │     ├─→ Verify save/load/merge binary compatibility
+  │     └─→ Update API_MAPPING.md if API changed
+  │
+  └─→ Step 3: Document decision in CLAUDE.md
+```
+
+**Decision Tree for M2 (Client-Side CRDT)**:
+
+```
+Planning M2 Client Implementation
+  │
+  ├─→ Step 1: Test browser WASM loading
+  │     │
+  │     ├─→ Test: Does Automerge.js 3.1.2 work in browser?
+  │     │   └─→ YES: Use 3.1.2 (matches .src reference)
+  │     │   └─→ NO: Try 3.2.0+
+  │     │
+  │     └─→ Test: Does Automerge.js 3.2.0+ work in browser?
+  │         └─→ YES: Check server compatibility (may need 0.7)
+  │         └─→ NO: Use bundler approach (vite/webpack + WASM)
+  │
+  ├─→ Step 2: Verify sync compatibility
+  │     │
+  │     └─→ Test: Do client/server sync messages decode?
+  │         └─→ YES: Deploy with current versions
+  │         └─→ NO: Align versions (upgrade server to match client)
+  │
+  └─→ Step 3: If server upgrade needed
+        │
+        ├─→ Change Cargo.toml: automerge = "0.7"
+        ├─→ Run full test suite
+        ├─→ Verify binary snapshot compatibility
+        └─→ Update docs + API mapping
+```
+
+**Critical Compatibility Questions** (research before M1/M2):
+
+1. **Sync Protocol**:
+   - [ ] Can Automerge.js 3.1.2 sync messages decode in Rust 0.5?
+   - [ ] Can Automerge.js 3.2.0 sync messages decode in Rust 0.5?
+   - [ ] Are sync messages backward compatible (0.5 ↔ 0.7)?
+
+2. **Browser WASM**:
+   - [ ] Why did `@automerge/automerge@3.1.2` CDN fail? (TypeError)
+   - [ ] Does 3.2.0+ have better browser WASM support?
+   - [ ] Do we need a bundler (webpack/vite) instead of CDN?
+
+3. **API Stability**:
+   - [ ] Do our 11 WASI exports work unchanged in 0.7?
+   - [ ] Does `AutoCommit::new()` API change in 0.7?
+   - [ ] Does `updateText()` method signature change?
+
+**Upgrade Risk Mitigation Checklist**:
+
+If upgrading from 0.5 → 0.7:
+
+- [ ] ✅ Compare 0.5 vs 0.7 changelog (`.src/automerge/`)
+- [ ] ✅ Check for breaking changes in our 11 WASI exports
+- [ ] ✅ Test `am_init()`, `am_save()`, `am_load()` still work
+- [ ] ✅ Test `am_text_splice()` behavior unchanged
+- [ ] ✅ Test `am_merge()` with 0.5-created snapshots
+- [ ] ✅ Re-run all Go tests (11/12 passing)
+- [ ] ✅ Regenerate test data: `make generate-test-data`
+- [ ] ✅ Test backward compatibility with existing `doc.am` files
+- [ ] ✅ Update `API_MAPPING.md` if method signatures changed
+- [ ] ✅ Document migration in CLAUDE.md
+
+**Current Recommendation**:
+
+- **M0**: ✅ Stay on 0.5 (already working perfectly)
+- **M1**: 🔬 Research first → likely stay on 0.5
+- **M2**: 🧪 Test client versions → decide based on results
+
+**Strategy**: Conservative, research-driven, minimize risk
+
 ### When `.src/automerge/` Changes → Update Our Code
 
 **Rule**: When you update `.src/automerge/` (via `git pull` or version bump), you MUST:
