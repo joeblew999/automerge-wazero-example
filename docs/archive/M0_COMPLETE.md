@@ -1,6 +1,15 @@
 # 🎉 PROJECT COMPLETE - Automerge WASI Demo
 
-> **Note**: This is a historical document from Milestone M0 (2025-10-20). File paths referenced here may be outdated after the 2025-10-20 documentation reorganization. See [docs/README.md](../README.md) for current documentation structure.
+> **⚠️ HISTORICAL DOCUMENT**: This file was created on 2025-10-20 for Milestone M0.
+>
+> **File references are intentionally preserved as-is** to maintain historical accuracy. Many files mentioned here have been reorganized:
+> - `TODO.md`, `README.md`, `CLAUDE.md` → now in repo root
+> - `DEMO.md` → `docs/tutorials/getting-started.md`
+> - `AGENT_AUTOMERGE.md` → `docs/ai-agents/automerge-guide.md`
+> - `API_MAPPING.md` → `docs/reference/api-mapping.md`
+> - `COMPLETE.md` → you're reading it (archived as `docs/archive/M0_COMPLETE.md`)
+>
+> See [docs/README.md](../README.md) for the current documentation structure.
 
 **Status:** ✅ **FULLY FUNCTIONAL - All Core Features Implemented**
 
