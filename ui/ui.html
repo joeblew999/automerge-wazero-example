@@ -178,12 +178,21 @@
         </div>
     </div>
 
+    <!-- Automerge.js 3.2.0-alpha.0 (built from source at .src/automerge/) -->
+    <script src="/vendor/automerge.js"></script>
+
     <script type="module">
-        // NOTE: Automerge CRDT is running server-side (Rust WASM in Go)
-        // This client just sends/receives full text for now
-        // Phase 2 will add client-side Automerge.js for sync messages
+        // NOTE: Automerge.js 3.2.0-alpha.0 is now loaded!
+        // Currently using server-side CRDT (Rust WASM in Go)
+        // TODO M2: Enable client-side CRDT with sync messages
 
         console.log('📄 Automerge WASI Demo - Client-side JS initialized');
+        console.log('✅ Automerge.js loaded:', typeof window.Automerge !== 'undefined' ? 'YES' : 'NO');
+
+        if (typeof window.Automerge !== 'undefined') {
+            console.log('📦 Automerge version:', window.Automerge.getObjectId ? '3.x' : 'unknown');
+            console.log('🔧 Available methods:', Object.keys(window.Automerge).slice(0, 10).join(', ') + '...');
+        }
 
         const textEditor = document.getElementById('textEditor');
         const saveBtn = document.getElementById('saveBtn');
