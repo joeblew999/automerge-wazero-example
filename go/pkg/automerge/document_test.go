@@ -12,7 +12,7 @@ import (
 
 // Test helper to get testdata path
 func testdataPath(filename string) string {
-	return filepath.Join("..", "..", "testdata", "snapshots", filename)
+	return filepath.Join("..", "..", "testdata", "unit", "snapshots", filename)
 }
 
 // TestNew verifies we can create a new empty document

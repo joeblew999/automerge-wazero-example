@@ -1,21 +1,30 @@
 # Test Data for Automerge Go Packages
 
-This directory contains test data for the Automerge Go implementation.
+This directory contains all test data organized by test type following Go conventions.
 
 ## Directory Structure
 
-- **snapshots/** - Binary Automerge document snapshots (.am files) for testing
-- **expected/** - Expected output files for test comparisons
-- **scripts/** - Helper scripts for generating and managing test data
+```
+go/testdata/
+├── unit/           # Unit test data (Go package tests)
+│   ├── snapshots/  # Binary .am files for testing
+│   ├── expected/   # Expected output files
+│   └── scripts/    # Test data generation scripts
+├── integration/    # Integration test scripts
+│   └── test_merge.sh
+└── e2e/            # End-to-end test artifacts
+    └── screenshots/  # Playwright test screenshots
+```
 
-## Generating Test Data
+## Unit Test Data (`unit/`)
 
-Test snapshots must be generated using a working Automerge implementation. Since we're building the implementation, we'll generate these once the WASM module is built.
+Binary Automerge document snapshots (`.am` files) used by Go package tests.
 
-### Manual Test Data Generation
+### Generating Unit Test Data
 
-Once the server is running, you can generate test snapshots like this:
+Test snapshots are generated using the WASM module:
 
+**Manual Generation**:
 ```bash
 # Start the server
 cd go/cmd/server
@@ -27,45 +36,92 @@ curl -X POST http://localhost:8080/api/text \
   -d '{"text":"Hello, World!"}'
 
 # Download the snapshot
-curl http://localhost:8080/api/doc > ../../testdata/snapshots/hello-world.am
-
-# Create an empty document
-# (restart server to get fresh document)
-curl http://localhost:8080/api/doc > ../../testdata/snapshots/empty.am
+curl http://localhost:8080/api/doc > ../testdata/unit/snapshots/hello-world.am
 ```
 
-### Using the Generation Script
-
+**Using the Generation Script**:
 ```bash
-cd testdata/scripts
+cd go/testdata/unit/scripts
 ./generate_test_data.sh
 ```
 
-## Test Snapshot Descriptions
+### Unit Test Snapshots
 
-### snapshots/empty.am
-An empty Automerge document with just the root content text object initialized.
+| File | Description | Size |
+|------|-------------|------|
+| `empty.am` | Empty document (root + text object) | ~50 bytes |
+| `hello-world.am` | Document with "Hello, World!" | ~200 bytes |
+| `simple-text.am` | Simple ASCII text | ~150 bytes |
+| `unicode-text.am` | Unicode + emoji testing | ~300 bytes |
+| `large-text.am` | ~10KB text (performance) | ~10KB |
 
-### snapshots/hello-world.am
-Document containing "Hello, World!" text.
+## Integration Tests (`integration/`)
 
-### snapshots/simple-text.am
-Document with simple ASCII text for basic testing.
+Bash scripts for end-to-end CRDT testing.
 
-### snapshots/unicode-text.am
-Document with Unicode characters (emoji, multi-byte chars) for UTF-8 testing.
+### test_merge.sh
 
-### snapshots/large-text.am
-Document with ~10KB of text for performance testing.
+Tests the complete CRDT merge scenario:
+1. Start two independent servers (Alice & Bob)
+2. Each creates different content offline
+3. Download Alice's `doc.am`
+4. Merge into Bob's server via `/api/merge`
+5. Verify CRDT properties (no data loss)
+
+**Run**:
+```bash
+cd go/testdata/integration
+./test_merge.sh
+```
+
+**Or use Makefile**:
+```bash
+make test-two-laptops  # Alternative way to run
+```
+
+## E2E Test Artifacts (`e2e/`)
+
+Screenshots and artifacts from Playwright MCP end-to-end tests.
+
+### Screenshots
+
+| File | Description |
+|------|-------------|
+| `playwright-test-save.png` | UI after saving text |
+| `playwright-test-final.png` | Complete test state |
+
+**Note**: `.playwright-mcp/testdata/` may also contain screenshots from recent test runs.
 
 ## Adding New Test Data
 
-1. Create the snapshot using the server or WASM module directly
-2. Save it to `snapshots/` with a descriptive name
-3. If there's expected output, save it to `expected/`
-4. Update this README with a description
-5. Add corresponding test cases in `pkg/automerge/*_test.go`
+### For Unit Tests
+
+1. Generate snapshot using server or WASM
+2. Save to `unit/snapshots/` with descriptive name
+3. If needed, save expected output to `unit/expected/`
+4. Update this README with description
+5. Add test case in `../pkg/automerge/*_test.go`
+
+### For Integration Tests
+
+1. Create bash script in `integration/`
+2. Follow pattern from `test_merge.sh`
+3. Make executable: `chmod +x script.sh`
+4. Add description here
+
+### For E2E Tests
+
+1. Run Playwright MCP test
+2. Copy screenshots from `.playwright-mcp/testdata/` to `e2e/screenshots/`
+3. Update this README with screenshot descriptions
 
 ## Note on Binary Files
 
-The `.am` files are binary Automerge snapshots. They should be committed to git and are relatively small (<100KB typically).
+All `.am` files are binary Automerge snapshots:
+- ✅ Committed to git
+- ✅ Small size (<100KB typically)
+- ✅ Start with magic bytes: `85 6f 4a 83`
+
+---
+
+**Last Updated**: 2025-10-20 (Reorganized into unit/integration/e2e)

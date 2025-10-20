@@ -263,7 +263,7 @@ clean-src:
 ## generate-test-data: Generate test snapshots for Go package tests
 generate-test-data: build-wasi
 	@echo "🎲 Generating test data..."
-	@cd $(GO_ROOT)/testdata/scripts && ./generate_test_data.sh
+	@cd $(GO_ROOT)/testdata/unit/scripts && ./generate_test_data.sh
 	@echo "✅ Test data generated"
 
 ## verify-docs: Check for broken internal markdown links
