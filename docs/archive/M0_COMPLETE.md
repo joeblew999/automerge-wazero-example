@@ -1,5 +1,7 @@
 # 🎉 PROJECT COMPLETE - Automerge WASI Demo
 
+> **Note**: This is a historical document from Milestone M0 (2025-10-20). File paths referenced here may be outdated after the 2025-10-20 documentation reorganization. See [docs/README.md](../README.md) for current documentation structure.
+
 **Status:** ✅ **FULLY FUNCTIONAL - All Core Features Implemented**
 
 This document summarizes the complete, working Automerge CRDT demonstration built with Rust WASI + Go + wazero.

@@ -362,4 +362,4 @@ When adding new API methods:
 5. Update `API_MAPPING.md` with coverage matrix
 6. Update this document if architecture changes
 
-See [`API_MAPPING.md`](../../API_MAPPING.md) for detailed API reference.
+See [`api-mapping.md`](../reference/api-mapping.md) for detailed API reference.

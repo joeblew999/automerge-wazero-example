@@ -190,7 +190,7 @@ curl -s http://localhost:8080/api/text
 
 ### Playwright MCP Tools Available
 
-**21 tools** (see [`MCP_PLAYWRIGHT_GUIDE.md`](MCP_PLAYWRIGHT_GUIDE.md) for details):
+**21 tools** (see [`mcp-playwright.md`](mcp-playwright.md) for details):
 - Navigation: `browser_navigate`, `browser_navigate_back`
 - Inspection: `browser_snapshot`, `browser_take_screenshot`, `browser_console_messages`
 - Interaction: `browser_click`, `browser_type`, `browser_fill_form`, `browser_select_option`
@@ -303,7 +303,7 @@ make run
 
 ### CI/CD
 
-**Not yet implemented** - See [`CLAUDE.md`](CLAUDE.md) T3:
+**Not yet implemented** - See [`CLAUDE.md`](../../CLAUDE.md) T3:
 
 ```yaml
 # TODO: GitHub Actions CI
@@ -317,11 +317,11 @@ make run
 
 ## 📚 8. Related Documentation
 
-- [`CLAUDE.md`](CLAUDE.md) - AI agent instructions (section 0.3: Testing Requirements)
-- [`MCP_PLAYWRIGHT_GUIDE.md`](MCP_PLAYWRIGHT_GUIDE.md) - Playwright MCP usage guide
-- [`CLEANUP_ANALYSIS.md`](CLEANUP_ANALYSIS.md) - Testing strategy clarification
-- [`API_MAPPING.md`](API_MAPPING.md) - API coverage tracking
-- [`TODO.md`](TODO.md) - Current tasks and known issues
+- [`CLAUDE.md`](../../CLAUDE.md) - AI agent instructions (section 0.3: Testing Requirements)
+- [`mcp-playwright.md`](mcp-playwright.md) - Playwright MCP usage guide
+- [`cleanup-analysis.md`](../archive/cleanup-analysis.md) - Testing strategy clarification
+- [`api-mapping.md`](../reference/api-mapping.md) - API coverage tracking
+- [`TODO.md`](../../TODO.md) - Current tasks and known issues
 
 ---
 

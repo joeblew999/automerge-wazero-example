@@ -801,9 +801,9 @@ pub extern "C" fn am_sync_recv(ptr: *const u8, len: u32) -> i32
 - **Crate:** https://crates.io/crates/automerge
 
 ### Project-Specific
-- [TODO.md](TODO.md) - Implementation roadmap
-- [CLAUDE.md](CLAUDE.md) - Project requirements
-- [README.md](README.md) - Project overview
+- [TODO.md](../../TODO.md) - Implementation roadmap
+- [CLAUDE.md](../../CLAUDE.md) - Project requirements
+- [README.md](../../README.md) - Project overview
 
 ---
 

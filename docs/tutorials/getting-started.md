@@ -271,7 +271,7 @@ Possible result: "Hello World Everyone"
 4. **No Presence** - Can't see other users' cursors
 5. **No Offline Support** - Must stay connected to server
 
-See [TODO.md](TODO.md) for complete implementation roadmap (Phases 1-10).
+See [TODO.md](../../TODO.md) for complete implementation roadmap (Phases 1-10).
 
 ---
 
@@ -343,7 +343,7 @@ Run tests to verify: `node test_text_crdt.mjs`
 
 This is a demo project showcasing Automerge + WASI + wazero integration.
 
-See [TODO.md](TODO.md) for implementation tasks.
+See [TODO.md](../../TODO.md) for implementation tasks.
 
 ---
 

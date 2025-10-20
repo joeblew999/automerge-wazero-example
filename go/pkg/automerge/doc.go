@@ -116,5 +116,5 @@
 //   - M3: NATS Transport - integration with NATS messaging
 //   - M4: Rich Text - marks, blocks, formatting
 //
-// See API_MAPPING.md for detailed API coverage and implementation status.
+// See docs/reference/api-mapping.md for detailed API coverage and implementation status.
 package automerge
