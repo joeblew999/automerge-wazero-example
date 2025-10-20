@@ -62,12 +62,12 @@ Always use the **3-nines** version (`joeblew999`).
 
 **AI Agent Documentation Files** (keep these updated):
 
-1. **`AGENT_AUTOMERGE.MD`** - For AI to understand Automerge concepts, CRDT behavior, and usage patterns
+1. **[`docs/ai-agents/automerge-guide.md`](docs/ai-agents/automerge-guide.md)** - For AI to understand Automerge concepts, CRDT behavior, and usage patterns
    - Purpose: High-level understanding of how Automerge works
    - Audience: AI agents learning to use Automerge effectively
    - Content: Concepts, best practices, common patterns
 
-2. **`API_MAPPING.MD`** - Technical reference for Automerge API → WASI → Go mapping
+2. **[`docs/reference/api-mapping.md`](docs/reference/api-mapping.md)** - Technical reference for Automerge API → WASI → Go mapping
    - Purpose: Complete API coverage matrix and implementation status
    - Audience: AI agents implementing features
    - Content: Every Rust method, corresponding WASI export, Go wrapper, implementation status
@@ -84,7 +84,7 @@ Always use the **3-nines** version (`joeblew999`).
 
 **AI Agent Documentation File**:
 
-3. **`AGENT_DATASTAR.MD`** - For AI to understand Datastar concepts and usage
+3. **[`docs/ai-agents/datastar-guide.md`](docs/ai-agents/datastar-guide.md)** - For AI to understand Datastar concepts and usage (TODO: create for M4)
    - Purpose: High-level understanding of Datastar for UI work
    - Audience: AI agents implementing UI features (M4+)
    - Content: Datastar patterns, SSE integration, reactive updates
@@ -134,7 +134,7 @@ Layer 4: Go High-Level API (go/pkg/automerge/*.go)
 
 1. ✅ Corresponding WASI export(s) in `rust/automerge_wasi/src/<module>.rs`
 2. ✅ FFI wrapper(s) in `go/pkg/wazero/<module>.go` (matching filename!)
-3. ✅ Update `API_MAPPING.MD` with:
+3. ✅ Update `docs/reference/api-mapping.md` with:
    - New Rust Automerge method (if applicable)
    - New WASI export signature
    - New Go wrapper
@@ -146,7 +146,7 @@ Layer 4: Go High-Level API (go/pkg/automerge/*.go)
 1. Add method: go/pkg/automerge/map.go → func (d *Document) Put(...)
 2. Add export: rust/automerge_wasi/src/map.rs → am_put(...)
 3. Add wrapper: go/pkg/wazero/map.go → func (r *Runtime) AmPut(...)
-4. Update docs: API_MAPPING.MD → document the mapping
+4. Update docs: docs/reference/api-mapping.md → document the mapping
 5. Add test: go/pkg/automerge/map_test.go → TestDocument_Put
 ```
 
@@ -156,7 +156,7 @@ Layer 4: Go High-Level API (go/pkg/automerge/*.go)
 
 1. ✅ FFI wrapper in corresponding `go/pkg/wazero/<module>.go` (same filename!)
 2. ✅ High-level method in `go/pkg/automerge/<module>.go`
-3. ✅ Update `API_MAPPING.MD`
+3. ✅ Update `docs/reference/api-mapping.md`
 4. ✅ Tests
 
 ---
@@ -176,7 +176,7 @@ Layer 2: Go FFI Wrappers (go/pkg/wazero/*.go - 1:1 with Layer 1)
            ↓
 Layer 3: Go High-Level API (go/pkg/automerge/*.go)
            ↓
-Layer 4: Documentation (API_MAPPING.MD, AGENT_AUTOMERGE.MD)
+Layer 4: Documentation (docs/reference/api-mapping.md, docs/ai-agents/automerge-guide.md)
 ```
 
 ### Version Tracking
@@ -375,7 +375,7 @@ git diff v3.1.2..v3.2.0 src/implementation.ts | grep "^+export function"
 **Action**: For each new function:
 1. Add stub to `go/pkg/automerge/<category>.go`
 2. Return `NotImplementedError("Function added in Automerge v3.2.0 - planned for milestone MX")`
-3. Update `API_MAPPING.MD` coverage matrix
+3. Update `docs/reference/api-mapping.md` coverage matrix
 
 #### Step 2: Check What Changed in Rust API
 
@@ -385,8 +385,8 @@ git diff rust/automerge@0.7.0..rust/automerge@0.8.0 src/
 ```
 
 **Action**: For each API change:
-1. Update `AGENT_AUTOMERGE.MD` if concepts changed
-2. Update `API_MAPPING.MD` "Complete Automerge Rust API Reference" section
+1. Update `docs/ai-agents/automerge-guide.md` if concepts changed
+2. Update `docs/reference/api-mapping.md` "Complete Automerge Rust API Reference" section
 3. Add TODO comments in stubs: `// TODO: Automerge 0.8.0 changed signature to...`
 
 #### Step 3: Check What Changed in Documentation
@@ -397,7 +397,7 @@ git diff main..new-version content/docs/
 ```
 
 **Action**:
-1. Update `AGENT_AUTOMERGE.MD` with new concepts/best practices
+1. Update `docs/ai-agents/automerge-guide.md` with new concepts/best practices
 2. Update examples in comments if API usage changed
 
 ### The 65-Function Contract
@@ -411,7 +411,7 @@ git diff main..new-version content/docs/
 If Automerge.js v3.3.0 adds `splitDocument()`:
 1. ✅ Add `func (d *Document) SplitDocument() error { return NotImplementedError("...") }`
 2. ✅ Update count: 66 methods total (13 implemented, 53 stubs)
-3. ✅ Update `API_MAPPING.MD` coverage: 11/66 = 16.7%
+3. ✅ Update `docs/reference/api-mapping.md` coverage: 11/66 = 16.7%
 4. ✅ Keep tracking the ratio
 
 ### Function Count Verification (Run Regularly)
@@ -454,7 +454,7 @@ git log --oneline --since="1 month ago" -- rust/automerge/src/
 1. Update `.src/automerge/` to latest stable release
 2. Run function count verification (above)
 3. Update stubs for new functions
-4. Update `API_MAPPING.MD` and `AGENT_AUTOMERGE.MD`
+4. Update `docs/reference/api-mapping.md` and `docs/ai-agents/automerge-guide.md`
 5. Document version gap in CLAUDE.md (this file)
 
 **Before Cargo.toml version bump**:
@@ -527,7 +527,7 @@ After ANY changes to the API layer:
 - [ ] Every Go method in `pkg/automerge/` has a clear path to WASI (or is marked as stub)
 - [ ] Every WASI export in `rust/automerge_wasi/src/` has a Go wrapper in `pkg/wazero/`
 - [ ] Every wrapper in `pkg/wazero/` is used by `pkg/automerge/`
-- [ ] `API_MAPPING.MD` is updated with coverage status
+- [ ] `docs/reference/api-mapping.md` is updated with coverage status
 - [ ] Tests verify the integration works
 - [ ] `make build-wasi && make test-go` passes
 
@@ -724,9 +724,9 @@ Add to the global `mcpServers` section:
 /Makefile                              # Build automation
 /README.md                             # User documentation
 /TODO.md                               # Task tracking (MUST keep updated!)
-/API_MAPPING.MD                        # API coverage matrix
-/AGENT_AUTOMERGE.MD                    # AI: Automerge concepts
-/AGENT_DATASTAR.MD                     # AI: Datastar concepts
+/docs/reference/api-mapping.md         # API coverage matrix
+/docs/ai-agents/automerge-guide.md     # AI: Automerge concepts
+/docs/ai-agents/datastar-guide.md      # AI: Datastar concepts (TODO: create for M4)
 /ui/ui.html                            # Browser UI
 /go/cmd/server/main.go                 # HTTP server (should be slim!)
 /go/pkg/automerge/*.go                 # High-level Go API
@@ -933,8 +933,8 @@ make run          # runs Go server with wazero
 
 **Update Documentation**:
 
-* [ ] Add M1 exports to `API_MAPPING.MD`
-* [ ] Update `AGENT_AUTOMERGE.MD` with sync protocol concepts
+* [ ] Add M1 exports to `docs/reference/api-mapping.md`
+* [ ] Update `docs/ai-agents/automerge-guide.md` with sync protocol concepts
 
 ### M2 — **Multi-Object Support** (Maps, Lists, Counters)
 
@@ -987,7 +987,7 @@ make run          # runs Go server with wazero
 * [ ] Browser: minimal JS streaming sync messages via SSE
 * [ ] Datastar "action" hooks to send local ops
 * [ ] Apply remote updates reactively
-* [ ] Reference `AGENT_DATASTAR.MD` for implementation
+* [ ] Reference `docs/ai-agents/datastar-guide.md` for implementation (create this doc in M4)
 * [ ] Optional WASM-Go frontends calling HTTP or NATS
 
 ### M5 — **Observability & Ops**
@@ -1112,7 +1112,7 @@ curl -s http://localhost:8080/api/stream  # observe snapshot + updates
 - [ ] Runs: `make run` → `GET /api/text` works ✅
 - [ ] SSE: two tabs receive `snapshot`/`update` ✅
 - [ ] Snapshot persists and reloads ✅
-- [ ] Updated: `API_MAPPING.MD` ✅
+- [ ] Updated: `docs/reference/api-mapping.md` ✅
 - [ ] Updated: `TODO.md` ✅
 - [ ] Updated: `README.md` (if needed) ✅
 - [ ] Playwright tests pass ✅

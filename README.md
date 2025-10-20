@@ -145,15 +145,26 @@ Or use the automated test script:
 ./test_merge.sh  # Automated Alice + Bob merge scenario
 ```
 
-See **[DEMO.md](DEMO.md)** for complete documentation!
+See **[Getting Started Guide](docs/tutorials/getting-started.md)** for complete documentation!
 
-## Development
+## Documentation
 
-See [CLAUDE.md](CLAUDE.md) for detailed documentation on:
-- WASI ABI specification
-- Development workflow
-- Testing procedures
-- Future roadmap (sync protocol, multi-doc, NATS, etc.)
+📚 **[Complete Documentation Index](docs/)** - Organized by topic
+
+### Quick Links
+
+- **[Getting Started](docs/tutorials/getting-started.md)** - Step-by-step tutorial
+- **[Architecture](docs/explanation/architecture.md)** - How the 4-layer system works
+- **[API Mapping](docs/reference/api-mapping.md)** - Complete API coverage matrix
+- **[Testing Guide](docs/development/testing.md)** - Running tests
+- **[Roadmap](docs/development/roadmap.md)** - Implementation status & future plans
+- **[CLAUDE.md](CLAUDE.md)** - AI agent instructions (for Claude Code)
+
+### For Developers
+
+- [Testing Guide](docs/development/testing.md) - Unit, integration, and E2E tests
+- [MCP Playwright](docs/development/mcp-playwright.md) - Browser testing
+- [Roadmap](docs/development/roadmap.md) - Milestones M0-M5
 
 ## Links
 

@@ -14,8 +14,8 @@
 - ✅ **Binary doc.am format** (196-564 bytes with magic bytes)
 - ✅ **11/12 Go tests PASSING** (1 skipped: merge investigation)
 - ✅ **3000+ lines of documentation**
-- ✅ **AGENT_AUTOMERGE.MD** - Comprehensive AI documentation (827 lines)
-- ✅ **AUTOMERGE_JS_VS_RUST_COMPARISON.MD** - Verified feature comparison (verified from source: 65 functions)
+- ✅ **[docs/ai-agents/automerge-guide.md](docs/ai-agents/automerge-guide.md)** - Comprehensive AI documentation (827 lines)
+- ✅ **[docs/reference/automerge-comparison.md](docs/reference/automerge-comparison.md)** - Verified feature comparison (verified from source: 65 functions)
 - ✅ **CLAUDE.md Section 0.3** - Upstream source synchronization tracking
 
 ## ✅ Implemented Features
@@ -265,7 +265,7 @@ Automerge documents are JSON-like:
   - [ ] Add `am_sync_recv(peer_id_ptr, id_len, msg_ptr, msg_len) -> i32`
   - [ ] Apply changes from peer's sync message
   - [ ] May trigger need to generate response message
-- [ ] **Storage Operations (See AGENT_AUTOMERGE.md Storage Model)**
+- [ ] **Storage Operations (See [docs/ai-agents/automerge-guide.md](docs/ai-agents/automerge-guide.md) Storage Model)**
   - [ ] Implement storage key format: `[docId, type, identifier]`
   - [ ] Save incremental changes: `[docId, "incremental", hash]`
   - [ ] Save snapshots: `[docId, "snapshot", heads]`
@@ -366,7 +366,7 @@ Automerge documents are JSON-like:
 **Feature:** Work without network, sync when reconnected
 
 - [ ] **Browser-Side Persistence**
-  - [ ] Store doc.am in IndexedDB (see AGENT_AUTOMERGE.md Storage Model)
+  - [ ] Store doc.am in IndexedDB (see [docs/ai-agents/automerge-guide.md](docs/ai-agents/automerge-guide.md) Storage Model)
   - [ ] Save incremental changes locally while offline
   - [ ] Load from IndexedDB on page reload
 - [ ] **Reconnection Logic**
