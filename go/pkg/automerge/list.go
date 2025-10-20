@@ -2,57 +2,107 @@ package automerge
 
 import "context"
 
-// List Operations - For M2 Milestone
+// List Operations
 //
-// Lists in Automerge are CRDT-aware sequences that support concurrent
-// insertions and deletions without conflicts.
+// Currently supports string values in a global list at ROOT["list_items"].
+// Future: Support multiple lists via object IDs and other value types.
 
-// Insert inserts a value at an index in a list object.
+// ListPush appends a value to the end of a list.
 //
-// Status: ❌ Not implemented (requires M2)
-func (d *Document) Insert(ctx context.Context, path Path, index uint, value Value) error {
-	return &NotImplementedError{
-		Feature:   "Insert",
-		Milestone: "M2",
-		Message:   "Requires am_insert WASI export",
+// Status: ✅ Implemented for global list with string values
+func (d *Document) ListPush(ctx context.Context, path Path, value Value) error {
+	// For now, only support global list (empty path means ROOT["list_items"])
+	if path.Len() != 0 {
+		return &NotImplementedError{
+			Feature:   "ListPush (custom paths)",
+			Milestone: "M2",
+			Message:   "Only global list at ROOT[\"list_items\"] is supported currently",
+		}
 	}
+
+	str, ok := value.AsString()
+	if !ok {
+		return &NotImplementedError{
+			Feature:   "ListPush (non-string values)",
+			Milestone: "M2",
+			Message:   "Only string values are supported currently",
+		}
+	}
+
+	return d.runtime.AmListPush(ctx, str)
 }
 
-// InsertObject inserts a new object (Map, List, or Text) at an index in a list.
+// ListInsert inserts a value at a specific index in a list.
 //
-// Returns the path to the newly created object.
-//
-// Status: ❌ Not implemented (requires M2)
-func (d *Document) InsertObject(ctx context.Context, path Path, index uint, objType ObjType) (Path, error) {
-	return Path{}, &NotImplementedError{
-		Feature:   "InsertObject",
-		Milestone: "M2",
-		Message:   "Requires am_insert_object WASI export",
+// Status: ✅ Implemented for global list with string values
+func (d *Document) ListInsert(ctx context.Context, path Path, index uint, value Value) error {
+	if path.Len() != 0 {
+		return &NotImplementedError{
+			Feature:   "ListInsert (custom paths)",
+			Milestone: "M2",
+			Message:   "Only global list is supported currently",
+		}
 	}
+
+	str, ok := value.AsString()
+	if !ok {
+		return &NotImplementedError{
+			Feature:   "ListInsert (non-string values)",
+			Milestone: "M2",
+			Message:   "Only string values are supported currently",
+		}
+	}
+
+	return d.runtime.AmListInsert(ctx, index, str)
 }
 
-// Remove removes an element at an index in a list.
+// ListGet retrieves a value at a specific index in a list.
 //
-// Note: This is equivalent to Delete for lists.
-//
-// Status: ❌ Not implemented (requires M2)
-func (d *Document) Remove(ctx context.Context, path Path, index uint) error {
-	return &NotImplementedError{
-		Feature:   "Remove",
-		Milestone: "M2",
-		Message:   "Requires am_delete WASI export (works for lists too)",
+// Status: ✅ Implemented for global list
+func (d *Document) ListGet(ctx context.Context, path Path, index uint) (Value, error) {
+	if path.Len() != 0 {
+		return Value{}, &NotImplementedError{
+			Feature:   "ListGet (custom paths)",
+			Milestone: "M2",
+			Message:   "Only global list is supported currently",
+		}
 	}
+
+	valueStr, err := d.runtime.AmListGet(ctx, index)
+	if err != nil {
+		return Value{}, err
+	}
+
+	return NewString(valueStr), nil
 }
 
-// Splice replaces a range of list elements with new values.
+// ListDelete removes a value at a specific index from a list.
 //
-// Similar to SpliceText but for generic values instead of text.
-//
-// Status: ❌ Not implemented (requires M2)
-func (d *Document) Splice(ctx context.Context, path Path, pos uint, del int, values []Value) error {
-	return &NotImplementedError{
-		Feature:   "Splice",
-		Milestone: "M2",
-		Message:   "Requires am_splice WASI export",
+// Status: ✅ Implemented for global list
+func (d *Document) ListDelete(ctx context.Context, path Path, index uint) error {
+	if path.Len() != 0 {
+		return &NotImplementedError{
+			Feature:   "ListDelete (custom paths)",
+			Milestone: "M2",
+			Message:   "Only global list is supported currently",
+		}
 	}
+
+	return d.runtime.AmListDelete(ctx, index)
+}
+
+// ListLength returns the number of elements in a list.
+//
+// Status: ✅ Implemented for global list
+func (d *Document) ListLength(ctx context.Context, path Path) (uint, error) {
+	if path.Len() != 0 {
+		return 0, &NotImplementedError{
+			Feature:   "ListLength (custom paths)",
+			Milestone: "M2",
+			Message:   "Only global list is supported currently",
+		}
+	}
+
+	len, err := d.runtime.AmListLen(ctx)
+	return uint(len), err
 }
