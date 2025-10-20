@@ -1,4 +1,4 @@
-.PHONY: help build-wasi build-wasi-debug build-js build-server run dev watch test test-go test-rust tidy clean clean-snapshots clean-all check-deps install-deps setup-rust-wasm run-alice run-bob run-server test-two-laptops clean-test-data setup-src update-src clean-src generate-test-data sync-versions
+.PHONY: help build-wasi build-wasi-debug build-js build-server run dev watch test test-go test-rust tidy clean clean-snapshots clean-all check-deps install-deps setup-rust-wasm run-alice run-bob run-server test-two-laptops clean-test-data setup-src update-src clean-src generate-test-data sync-versions verify-docs
 
 # Configuration
 WASI_TARGET = wasm32-wasip1
@@ -265,3 +265,34 @@ generate-test-data: build-wasi
 	@echo "🎲 Generating test data..."
 	@cd $(GO_ROOT)/testdata/scripts && ./generate_test_data.sh
 	@echo "✅ Test data generated"
+
+## verify-docs: Check for broken internal markdown links
+verify-docs:
+	@echo "🔍 Checking for broken internal documentation links..."
+	@echo ""
+	@ERRORS=0; \
+	for file in $$(find . -name "*.md" -not -path "./node_modules/*" -not -path "./.src/*"); do \
+		while IFS= read -r line; do \
+			if echo "$$line" | grep -qE '\]\([^h#][^)]*\.md[^)]*\)'; then \
+				link=$$(echo "$$line" | grep -oE '\]\([^h#][^)]*\.md[^)]*\)' | sed 's/][(]//;s/)//'); \
+				dir=$$(dirname "$$file"); \
+				target="$$dir/$$link"; \
+				if [ ! -f "$$target" ]; then \
+					echo "❌ Broken link in $$file:"; \
+					echo "   Link: $$link"; \
+					echo "   Expected: $$target"; \
+					echo ""; \
+					ERRORS=$$((ERRORS + 1)); \
+				fi; \
+			fi; \
+		done < "$$file"; \
+	done; \
+	if [ $$ERRORS -eq 0 ]; then \
+		echo "✅ All internal documentation links valid!"; \
+	else \
+		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+		echo "❌ Found $$ERRORS broken link(s)"; \
+		echo ""; \
+		echo "Fix these before committing documentation changes."; \
+		exit 1; \
+	fi

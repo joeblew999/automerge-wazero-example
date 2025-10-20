@@ -533,6 +533,141 @@ After ANY changes to the API layer:
 
 ---
 
+## 0.4) 📋 DOCUMENTATION PRINCIPLES - SINGLE SOURCE OF TRUTH
+
+**CRITICAL**: After the 2025-10-20 documentation reorganization (Diátaxis framework), follow these principles to prevent documentation drift and broken links.
+
+### Single Source of Truth (SSoT) Principle
+
+**Rule**: Each piece of information lives in **EXACTLY ONE** canonical location.
+
+**Why**: Prevents inconsistencies, reduces maintenance burden, eliminates broken links.
+
+**How**: Use links to reference, NEVER duplicate content.
+
+### Documentation Structure
+
+```
+/
+├── README.md              # User-facing entry point (links to docs/)
+├── CLAUDE.md              # AI agent master instructions (links to docs/)
+├── TODO.md                # Active task tracking (links to docs/)
+└── docs/                  # ALL other documentation (organized by Diátaxis)
+    ├── README.md          # Master documentation index
+    ├── tutorials/         # Learning-oriented (step-by-step)
+    ├── how-to/            # Goal-oriented (recipes)
+    ├── reference/         # Information-oriented (lookup)
+    ├── explanation/       # Understanding-oriented (concepts)
+    ├── development/       # Developer workflow
+    ├── ai-agents/         # AI-specific guides
+    └── archive/           # Historical docs
+```
+
+### Before Moving/Renaming Documentation Files
+
+**ALWAYS run these checks**:
+
+```bash
+# 1. Find ALL references to the file
+grep -r "FILENAME.md" . --include="*.md" --include="*.go" --include="*.rs"
+
+# 2. List all files that reference it
+rg -l "FILENAME.md" --type md --type go --type rust
+
+# 3. Preview what needs updating
+rg "FILENAME.md" --type md --type go --type rust -n
+```
+
+**Then**:
+1. Move/rename the file using `git mv` (preserves history)
+2. Update ALL references found in step 1-3
+3. Run `make verify-docs` to check for broken links
+4. Commit file move and reference updates together
+
+### After Any Documentation Changes
+
+**ALWAYS run**:
+
+```bash
+make verify-docs  # Checks for broken internal markdown links
+```
+
+**This target**:
+- ✅ Scans all .md files (except node_modules, .src)
+- ✅ Detects broken internal links (relative paths)
+- ✅ Reports exactly which files have broken links
+- ❌ Exits with error if any broken links found
+
+**Add to your workflow**:
+```bash
+# Before committing documentation changes
+make verify-docs && git add docs/ *.md && git commit
+```
+
+### Naming Convention
+
+**Name files by PURPOSE, not content**:
+
+```
+❌ BAD:  AUTOMERGE_JS_VS_RUST_COMPARISON.md (describes content)
+✅ GOOD: docs/reference/automerge-comparison.md (describes purpose)
+
+❌ BAD:  MCP_PLAYWRIGHT_GUIDE.md (screams old structure)
+✅ GOOD: docs/development/mcp-playwright.md (clear location + purpose)
+
+❌ BAD:  API_MAPPING.MD (uppercase, vague location)
+✅ GOOD: docs/reference/api-mapping.md (lowercase, clear location)
+```
+
+### Cross-Referencing Rules
+
+1. **Use relative paths** from current file location:
+   ```markdown
+   # In docs/development/testing.md
+   See [API Mapping](../reference/api-mapping.md)
+
+   # In docs/ai-agents/automerge-guide.md
+   See [CLAUDE.md](../../CLAUDE.md)
+   ```
+
+2. **Use descriptive link text**:
+   ```markdown
+   ✅ GOOD: See [API Mapping](../reference/api-mapping.md) for coverage
+   ❌ BAD:  See [here](../reference/api-mapping.md)
+   ```
+
+3. **Verify link targets exist** before committing
+
+### Intentional Exceptions
+
+**CLAUDE.md** contains some duplicate content by design:
+- It's the **master instructions** for AI agents
+- Must be self-contained for quick reference
+- Links to docs/ for detailed information
+
+This is acceptable duplication because:
+1. CLAUDE.md is the entry point for AI agents
+2. Detailed docs are in docs/ (single source)
+3. CLAUDE.md links to docs/ for depth
+
+### Recovery: If You Find Broken Links
+
+1. **Don't panic** - run the audit:
+   ```bash
+   make verify-docs  # Shows exactly what's broken
+   ```
+
+2. **Fix systematically**:
+   - Update each broken link to correct relative path
+   - Test: `make verify-docs` should pass
+   - Commit fixes
+
+3. **Prevent recurrence**:
+   - Add to PR checklist: "Run `make verify-docs`"
+   - Consider pre-commit hook (optional)
+
+---
+
 ## 📝 RECENT CHANGES
 
 ### 2025-10-20: Refactoring - Split exports.go into Module Files ✅
