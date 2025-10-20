@@ -1,4 +1,4 @@
-.PHONY: help build-wasi build-wasi-debug build-server run dev watch test test-go test-rust tidy clean clean-snapshots clean-all check-deps install-deps run-alice run-bob run-server test-two-laptops clean-test-data setup-src update-src clean-src generate-test-data
+.PHONY: help build-wasi build-wasi-debug build-js build-server run dev watch test test-go test-rust tidy clean clean-snapshots clean-all check-deps install-deps setup-rust-wasm run-alice run-bob run-server test-two-laptops clean-test-data setup-src update-src clean-src generate-test-data sync-versions
 
 # Configuration
 WASI_TARGET = wasm32-wasip1
@@ -9,10 +9,17 @@ GO_ROOT = go
 GO_DIR = $(GO_ROOT)/cmd/server
 PORT ?= 8080
 
-# Source reference configuration
+# Source reference configuration (single source of truth)
 AUTOMERGE_VERSION = rust/automerge@0.7.0
+AUTOMERGE_JS_VERSION = 3.2.0-alpha.0
 AUTOMERGE_REPO = https://github.com/automerge/automerge.git
 SRC_DIR = .src
+
+# JavaScript build configuration
+JS_SRC_DIR = $(SRC_DIR)/automerge/javascript
+JS_DIST = $(JS_SRC_DIR)/dist/cjs/iife.cjs
+JS_VENDOR_DIR = ui/vendor
+JS_VENDOR = $(JS_VENDOR_DIR)/automerge.js
 
 ## help: Show this help message
 help:
@@ -33,6 +40,32 @@ install-deps:
 	rustup target add $(WASI_TARGET)
 	@echo "✅ WASI target installed"
 
+## setup-rust-wasm: Install Rust targets and tools needed for JavaScript build
+setup-rust-wasm:
+	@echo "🦀 Setting up Rust WASM toolchain for Automerge.js build..."
+	@echo ""
+	@echo "This installs:"
+	@echo "  1. wasm32-unknown-unknown target (for stable toolchain)"
+	@echo "  2. wasm32-unknown-unknown target (for 1.86 toolchain)"
+	@echo "  3. wasm-bindgen CLI tool"
+	@echo ""
+	@echo "Adding wasm32-unknown-unknown target to stable toolchain..."
+	@rustup target add wasm32-unknown-unknown
+	@echo ""
+	@echo "Adding wasm32-unknown-unknown target to 1.86 toolchain (used by Automerge.js build)..."
+	@rustup target add wasm32-unknown-unknown --toolchain 1.86-aarch64-apple-darwin 2>/dev/null || \
+		echo "⚠️  1.86 toolchain not installed (will be installed automatically by Automerge.js build)"
+	@echo ""
+	@echo "Checking if wasm-bindgen CLI is installed..."
+	@if ! command -v wasm-bindgen >/dev/null 2>&1; then \
+		echo "Installing wasm-bindgen-cli (this may take a few minutes)..."; \
+		cargo install wasm-bindgen-cli; \
+	else \
+		echo "✅ wasm-bindgen already installed at $$(which wasm-bindgen)"; \
+	fi
+	@echo ""
+	@echo "✅ Rust WASM toolchain ready for 'make build-js'"
+
 ## build-wasi: Build Rust WASI module (release mode)
 build-wasi: check-deps
 	@echo "🔨 Building Rust WASI module (release)..."
@@ -46,6 +79,42 @@ build-wasi-debug: check-deps
 	cd $(WASM_DIR) && cargo build --target $(WASI_TARGET)
 	@echo "✅ Built: $(WASM_DEBUG)"
 	@ls -lh $(WASM_DEBUG)
+
+## build-js: Build Automerge.js from .src/ (single source of truth)
+build-js:
+	@echo "📦 Building Automerge.js $(AUTOMERGE_JS_VERSION) from source..."
+	@if [ ! -d "$(JS_SRC_DIR)" ]; then \
+		echo "❌ Error: $(JS_SRC_DIR) not found. Run 'make setup-src' first."; \
+		exit 1; \
+	fi
+	@echo "Installing JavaScript dependencies (using bun)..."
+	@cd $(JS_SRC_DIR) && bun install --frozen-lockfile
+	@echo "Building Automerge.js (using bun)..."
+	@cd $(JS_SRC_DIR) && bun run build
+	@mkdir -p $(JS_VENDOR_DIR)
+	@cp $(JS_DIST) $(JS_VENDOR)
+	@echo "✅ Built: $(JS_VENDOR)"
+	@ls -lh $(JS_VENDOR)
+	@echo "📍 Version: Rust $(AUTOMERGE_VERSION) ↔ JS $(AUTOMERGE_JS_VERSION) (same monorepo)"
+
+## sync-versions: Verify all components use same .src/ version
+sync-versions:
+	@echo "🔍 Checking version alignment..."
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "📌 .src/automerge git version:"
+	@cd $(SRC_DIR)/automerge && git describe --tags
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "🦀 Cargo.toml dependency:"
+	@grep 'automerge.*path' rust/automerge_wasi/Cargo.toml || echo "  ⚠️  Using crates.io (should use path)"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "📦 JavaScript package.json:"
+	@cd $(JS_SRC_DIR) && cat package.json | grep '"version"' | head -1
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@if [ -f "$(JS_VENDOR)" ]; then \
+		echo "✅ Built Automerge.js: $$(ls -lh $(JS_VENDOR) | awk '{print $$5}')"; \
+	else \
+		echo "⚠️  Automerge.js not built. Run 'make build-js'"; \
+	fi
 
 ## build-server: Build the Go server binary
 build-server:

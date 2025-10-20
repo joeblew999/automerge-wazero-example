@@ -7,7 +7,9 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-automerge = "0.5"
+# Use local .src/ for version control and alignment with JavaScript
+# This ensures Rust 0.7.0 and JS 3.2.0-alpha.0 are from same monorepo
+automerge = { path = "../../.src/automerge/rust/automerge" }
 
 [profile.release]
 opt-level = "z"
