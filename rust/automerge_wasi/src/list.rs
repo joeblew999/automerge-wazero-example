@@ -1,3 +1,34 @@
+// ==============================================================================
+// Layer 2: Rust WASI Exports - List CRDT
+// ==============================================================================
+// ARCHITECTURE: This is the WASI export layer (Layer 2/7).
+//
+// RESPONSIBILITIES:
+// - WASI-compatible function exports (C ABI)
+// - Memory management (reading/writing linear memory)
+// - UTF-8 string marshaling
+// - Error code translation (Rust Result → i32)
+//
+// DEPENDENCIES:
+// - Layer 1: automerge crate (CRDT core)
+// - crate::state (global document state)
+//
+// DEPENDENTS:
+// - Layer 3: pkg/wazero/crdt_list.go (FFI wrappers)
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 3: pkg/wazero/crdt_list.go (Go FFI wrappers)
+// - Layer 4: pkg/automerge/crdt_list.go (Go high-level API)
+// - Layer 5: pkg/server/crdt_list.go (stateful server)
+// - Layer 6: pkg/api/crdt_list.go (HTTP handlers)
+// - Layer 7: web/js/crdt_list.js + web/components/crdt_list.html (TODO)
+//
+// NOTES:
+// - All exports use #[no_mangle] and extern "C"
+// - Lists are CRDT ordered sequences (concurrent insert/delete)
+// - Return 0 on success, negative error codes on failure
+// ==============================================================================
+
 // WASI exports for Automerge list operations
 //
 // Lists in Automerge are CRDT ordered sequences that support concurrent insertions

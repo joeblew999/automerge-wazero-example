@@ -1,3 +1,31 @@
+// ==============================================================================
+// Layer 3: Go FFI Wrappers - Generic Object Operations
+// ==============================================================================
+// ARCHITECTURE: This is the FFI wrapper layer (Layer 3/7).
+//
+// RESPONSIBILITIES:
+// - 1:1 wrapping of WASI exports
+// - Go → WASM memory marshaling
+// - Error code handling
+// - Memory allocation/deallocation via am_alloc/am_free
+//
+// DEPENDENCIES:
+// - Layer 2: rust/automerge_wasi/src/generic.rs (WASI exports)
+// - wazero runtime (WASM execution)
+//
+// DEPENDENTS:
+// - Layer 4: pkg/automerge (high-level API - used across multiple modules)
+//
+// RELATED FILES:
+// - Layer 2: rust/automerge_wasi/src/generic.rs (WASI exports)
+// - Used by: All pkg/automerge/*.go files
+//
+// NOTES:
+// - Generic operations work across all CRDT types
+// - No business logic here - just FFI bridging
+// - Uses r.Memory() to write/read WASM linear memory
+// ==============================================================================
+
 package wazero
 
 import (

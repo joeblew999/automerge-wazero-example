@@ -1,3 +1,34 @@
+// ==============================================================================
+// Layer 3: Go FFI Wrappers - Map CRDT
+// ==============================================================================
+// ARCHITECTURE: This is the FFI wrapper layer (Layer 3/7).
+//
+// RESPONSIBILITIES:
+// - 1:1 wrapping of WASI exports
+// - Go → WASM memory marshaling
+// - Error code handling
+// - Memory allocation/deallocation via am_alloc/am_free
+//
+// DEPENDENCIES:
+// - Layer 2: rust/automerge_wasi/src/map.rs (WASI exports)
+// - wazero runtime (WASM execution)
+//
+// DEPENDENTS:
+// - Layer 4: pkg/automerge/crdt_map.go (high-level API)
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 2: rust/automerge_wasi/src/map.rs (WASI exports)
+// - Layer 4: pkg/automerge/crdt_map.go (Go high-level API)
+// - Layer 5: pkg/server/crdt_map.go (stateful server)
+// - Layer 6: pkg/api/crdt_map.go (HTTP handlers)
+// - Layer 7: web/js/crdt_map.js + web/components/crdt_map.html (TODO)
+//
+// NOTES:
+// - Each method corresponds exactly to one WASI export
+// - No business logic here - just FFI bridging
+// - Uses r.Memory() to write/read WASM linear memory
+// ==============================================================================
+
 package wazero
 
 import (

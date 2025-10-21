@@ -1,3 +1,35 @@
+// ==============================================================================
+// Layer 3: Go FFI Wrappers - History & Time-Travel
+// ==============================================================================
+// ARCHITECTURE: This is the FFI wrapper layer (Layer 3/7).
+//
+// RESPONSIBILITIES:
+// - 1:1 wrapping of WASI exports
+// - Go → WASM memory marshaling
+// - Error code handling
+// - Memory allocation/deallocation via am_alloc/am_free
+//
+// DEPENDENCIES:
+// - Layer 2: rust/automerge_wasi/src/history.rs (WASI exports)
+// - wazero runtime (WASM execution)
+//
+// DEPENDENTS:
+// - Layer 4: pkg/automerge/crdt_history.go (high-level API)
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 2: rust/automerge_wasi/src/history.rs (WASI exports)
+// - Layer 4: pkg/automerge/crdt_history.go (Go high-level API)
+// - Layer 5: pkg/server/crdt_history.go (stateful server)
+// - Layer 6: pkg/api/crdt_history.go (HTTP handlers)
+// - Layer 7: web/js/crdt_history.js + web/components/crdt_history.html (TODO)
+//
+// NOTES:
+// - Each method corresponds exactly to one WASI export
+// - No business logic here - just FFI bridging
+// - History allows querying changes, heads, and time-travel
+// - Uses r.Memory() to write/read WASM linear memory
+// ==============================================================================
+
 package wazero
 
 import (

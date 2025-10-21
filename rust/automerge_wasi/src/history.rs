@@ -1,3 +1,34 @@
+// ==============================================================================
+// Layer 2: Rust WASI Exports - History & Time-Travel
+// ==============================================================================
+// ARCHITECTURE: This is the WASI export layer (Layer 2/7).
+//
+// RESPONSIBILITIES:
+// - WASI-compatible function exports (C ABI)
+// - Memory management (reading/writing linear memory)
+// - UTF-8 string marshaling
+// - Error code translation (Rust Result → i32)
+//
+// DEPENDENCIES:
+// - Layer 1: automerge crate (CRDT core)
+// - crate::state (global document state)
+//
+// DEPENDENTS:
+// - Layer 3: pkg/wazero/crdt_history.go (FFI wrappers)
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 3: pkg/wazero/crdt_history.go (Go FFI wrappers)
+// - Layer 4: pkg/automerge/crdt_history.go (Go high-level API)
+// - Layer 5: pkg/server/crdt_history.go (stateful server)
+// - Layer 6: pkg/api/crdt_history.go (HTTP handlers)
+// - Layer 7: web/js/crdt_history.js + web/components/crdt_history.html (TODO)
+//
+// NOTES:
+// - All exports use #[no_mangle] and extern "C"
+// - History allows querying changes, heads, and time-travel
+// - Return 0 on success, negative error codes on failure
+// ==============================================================================
+
 // WASI exports for Automerge history and time-travel operations
 //
 // History operations allow you to query the document's change history,

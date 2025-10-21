@@ -1,3 +1,34 @@
+// ==============================================================================
+// Layer 2: Rust WASI Exports - Counter CRDT
+// ==============================================================================
+// ARCHITECTURE: This is the WASI export layer (Layer 2/7).
+//
+// RESPONSIBILITIES:
+// - WASI-compatible function exports (C ABI)
+// - Memory management (reading/writing linear memory)
+// - UTF-8 string marshaling
+// - Error code translation (Rust Result → i32)
+//
+// DEPENDENCIES:
+// - Layer 1: automerge crate (CRDT core)
+// - crate::state (global document state)
+//
+// DEPENDENTS:
+// - Layer 3: pkg/wazero/crdt_counter.go (FFI wrappers)
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 3: pkg/wazero/crdt_counter.go (Go FFI wrappers)
+// - Layer 4: pkg/automerge/crdt_counter.go (Go high-level API)
+// - Layer 5: pkg/server/crdt_counter.go (stateful server)
+// - Layer 6: pkg/api/crdt_counter.go (HTTP handlers)
+// - Layer 7: web/js/crdt_counter.js + web/components/crdt_counter.html (TODO)
+//
+// NOTES:
+// - All exports use #[no_mangle] and extern "C"
+// - Counters support concurrent increment/decrement (automatic merge)
+// - Return 0 on success, negative error codes on failure
+// ==============================================================================
+
 // WASI exports for Automerge counter operations
 //
 // Counters are CRDT integers that support concurrent increments/decrements
