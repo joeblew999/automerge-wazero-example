@@ -95,12 +95,25 @@ Layer 6: Go HTTP API (go/pkg/api/<module>.go - HTTP handlers)
 | sync.rs | sync.go | sync.go | sync.go | sync.go | Sync protocol (M1) |
 | richtext.rs | richtext.go | richtext.go | richtext.go | richtext.go | Rich text (M2) |
 
-**Additional Server Modules**:
+**Infrastructure Files (NOT in 1:1 mapping)**:
 
-| File | Purpose | Layer |
-|------|---------|-------|
-| server/broadcast.go | SSE client management | Layer 5 only |
-| api/util.go | HTTP helper functions (parsePathString) | Layer 6 only |
+These files are **exceptions** to the 1:1 rule - they provide infrastructure, not CRDT operations:
+
+| File | Purpose | Why No 1:1 Mapping |
+|------|---------|-------------------|
+| **Layer 5 (Server)** | | |
+| server/server.go | Server struct, constructor, lifecycle | Container for state, not CRDT operation |
+| server/broadcast.go | SSE client management | Server infrastructure, not CRDT logic |
+| **Layer 6 (HTTP API)** | | |
+| api/handlers.go | Legacy text handler | Early prototype (has layer marker) |
+| api/util.go | HTTP helpers (parsePathString) | HTTP protocol utility, not CRDT |
+| api/static.go | Static file serving | UI serving infrastructure |
+| **Layer 4 (Automerge)** | | |
+| automerge/doc.go | Package documentation | Go convention |
+| automerge/errors.go | Error definitions | Cross-cutting concern |
+| automerge/types.go | Type definitions (Path, etc.) | Cross-cutting concern |
+
+**Rule of Thumb**: If a file implements a **CRDT operation** (text, map, list, counter, sync, richtext, cursor, history, generic), it follows 1:1 mapping. If it's **infrastructure** (server setup, HTTP routing, error types), it doesn't need to.
 
 ### Layer Responsibilities
 
