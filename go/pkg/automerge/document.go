@@ -71,3 +71,23 @@ func (d *Document) Merge(ctx context.Context, other *Document) error {
 	// Merge into this document
 	return d.runtime.AmMerge(ctx, otherData)
 }
+
+// GetActor returns the actor ID for this document.
+//
+// The actor ID uniquely identifies this peer in the distributed system.
+// It's used to track which changes came from which peer.
+//
+// Status: ✅ Implemented
+func (d *Document) GetActor(ctx context.Context) (string, error) {
+	return d.runtime.AmGetActor(ctx)
+}
+
+// SetActor sets the actor ID for this document.
+//
+// This should be set before making any changes to the document.
+// The actor ID uniquely identifies this peer.
+//
+// Status: ✅ Implemented
+func (d *Document) SetActor(ctx context.Context, actorID string) error {
+	return d.runtime.AmSetActor(ctx, actorID)
+}

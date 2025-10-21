@@ -1,0 +1,35 @@
+<!-- M0: Text CRDT Component -->
+<div class="component-container">
+    <h2>Text CRDT Editing</h2>
+    <p class="description">
+        Server-side Automerge Text CRDT with real-time SSE broadcasting.
+        All clients share the same document state.
+    </p>
+
+    <div class="editor-section">
+        <textarea id="text-editor" class="editor-textarea" placeholder="Start typing... Changes are synced via SSE"></textarea>
+        <div class="controls">
+            <button id="text-save" class="btn btn-primary">💾 Save Changes</button>
+            <button id="text-clear" class="btn btn-secondary">🗑️ Clear</button>
+            <button id="text-load" class="btn btn-secondary">🔄 Reload</button>
+        </div>
+        <div class="info-bar">
+            <span>Characters: <strong id="text-char-count">0</strong></span>
+            <span id="text-status" class="status-text"></span>
+        </div>
+    </div>
+
+    <div class="help-section">
+        <h3>How it works:</h3>
+        <ul>
+            <li>Type in the textarea - character count updates in real-time</li>
+            <li>Click "Save Changes" or press Cmd/Ctrl+S to persist</li>
+            <li>Server broadcasts updates via SSE to all connected clients</li>
+            <li>Open multiple tabs to see real-time synchronization</li>
+        </ul>
+        <h3>API Endpoints:</h3>
+        <code>GET /api/text</code> - Get current text<br>
+        <code>POST /api/text</code> - Update text<br>
+        <code>GET /api/stream</code> - SSE updates
+    </div>
+</div>

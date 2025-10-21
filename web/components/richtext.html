@@ -1,0 +1,86 @@
+<!-- M2: RichText Marks Component -->
+<div class="component-container">
+    <h2>✨ Rich Text Marks (M2)</h2>
+    <p class="description">
+        Text formatting with CRDT-aware marks (bold, italic, underline).
+        Marks are associated with character positions and merge correctly.
+    </p>
+
+    <div class="richtext-demo">
+        <div class="editor-section">
+            <textarea id="richtext-editor" class="editor-textarea" placeholder="Type text to format...">Hello World! This is a test.</textarea>
+            <div class="info-bar">
+                <span>Selection: <strong id="richtext-selection">None</strong></span>
+                <span>Position: <strong id="richtext-cursor">0</strong></span>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Apply Mark</h3>
+            <div class="form-row">
+                <select id="mark-name">
+                    <option value="bold">Bold</option>
+                    <option value="italic">Italic</option>
+                    <option value="underline">Underline</option>
+                    <option value="highlight">Highlight</option>
+                    <option value="strikethrough">Strikethrough</option>
+                </select>
+                <input type="number" id="mark-start" placeholder="Start" value="0" min="0" />
+                <input type="number" id="mark-end" placeholder="End" value="5" min="0" />
+                <select id="mark-expand">
+                    <option value="none">No Expand</option>
+                    <option value="before">Expand Before</option>
+                    <option value="after">Expand After</option>
+                    <option value="both">Expand Both</option>
+                </select>
+                <button id="mark-apply" class="btn btn-primary">Apply Mark</button>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Remove Mark</h3>
+            <div class="form-row">
+                <select id="unmark-name">
+                    <option value="bold">Bold</option>
+                    <option value="italic">Italic</option>
+                    <option value="underline">Underline</option>
+                    <option value="highlight">Highlight</option>
+                    <option value="strikethrough">Strikethrough</option>
+                </select>
+                <input type="number" id="unmark-start" placeholder="Start" value="0" min="0" />
+                <input type="number" id="unmark-end" placeholder="End" value="5" min="0" />
+                <button id="unmark-apply" class="btn btn-danger">Remove Mark</button>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Get Marks at Position</h3>
+            <div class="form-row">
+                <input type="number" id="marks-pos" placeholder="Position" value="0" min="0" />
+                <button id="marks-get" class="btn btn-primary">Get Marks</button>
+            </div>
+            <div id="marks-display" class="code-block"></div>
+        </div>
+
+        <div class="quick-actions">
+            <h3>Quick Actions</h3>
+            <button id="richtext-use-selection" class="btn btn-secondary btn-small">Use Current Selection</button>
+            <button id="richtext-clear-all" class="btn btn-secondary btn-small">Clear All Marks</button>
+        </div>
+    </div>
+
+    <div class="help-section">
+        <h3>How it works:</h3>
+        <ul>
+            <li>Select text range (start/end positions)</li>
+            <li>Apply marks (bold, italic, etc.) to the range</li>
+            <li>Marks are stored with character positions</li>
+            <li>Query marks at any position to see active formatting</li>
+            <li>Expand modes control how marks behave during text insertion</li>
+        </ul>
+        <h3>API Endpoints:</h3>
+        <code>POST /api/richtext/mark</code> - Apply mark<br>
+        <code>POST /api/richtext/unmark</code> - Remove mark<br>
+        <code>GET /api/richtext/marks?path=ROOT.content&pos=N</code> - Get marks at position
+    </div>
+</div>

@@ -136,13 +136,22 @@ func (r *Runtime) AmMarks(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("failed to read marks from WASM memory")
 	}
 
-	// Trim null bytes (Rust may over-allocate buffer)
-	// Find the first null byte and truncate there
+	// Trim to actual JSON length
+	// The JSON is an array, so find the closing ] or null byte
+	jsonEnd := -1
 	for i, b := range marksBytes {
-		if b == 0 {
-			marksBytes = marksBytes[:i]
+		if b == ']' {
+			jsonEnd = i + 1
 			break
 		}
+		if b == 0 {
+			jsonEnd = i
+			break
+		}
+	}
+
+	if jsonEnd > 0 {
+		marksBytes = marksBytes[:jsonEnd]
 	}
 
 	return string(marksBytes), nil

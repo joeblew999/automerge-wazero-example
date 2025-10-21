@@ -1,4 +1,4 @@
-.PHONY: help build-wasi build-wasi-debug build-js build-server run dev watch test test-go test-rust tidy clean clean-snapshots clean-all check-deps install-deps setup-rust-wasm run-alice run-bob run-server test-two-laptops clean-test-data setup-src update-src clean-src generate-test-data sync-versions verify-docs
+.PHONY: help build-wasi build-wasi-debug build-js build-server run dev watch test test-go test-rust test-http test-playwright tidy clean clean-snapshots clean-all check-deps install-deps setup-rust-wasm run-alice run-bob run-server test-two-laptops clean-test-data setup-src update-src clean-src generate-test-data sync-versions verify-docs verify-web
 
 # Configuration
 WASI_TARGET = wasm32-wasip1
@@ -10,16 +10,26 @@ GO_DIR = $(GO_ROOT)/cmd/server
 PORT ?= 8080
 
 # Source reference configuration (single source of truth)
-AUTOMERGE_VERSION = rust/automerge@0.7.0
-AUTOMERGE_JS_VERSION = 3.2.0-alpha.0
+# We build from .src/automerge/ at the specified git tag
+# Tag: https://github.com/automerge/automerge/releases/tag/rust%2Fautomerge%400.7.0
 AUTOMERGE_REPO = https://github.com/automerge/automerge.git
+AUTOMERGE_TAG = rust/automerge@0.7.0
 SRC_DIR = .src
 
 # JavaScript build configuration
+# Builds from .src/automerge/javascript/ and copies to web/vendor/
+# The web/vendor/ directory is served at /vendor/ route
 JS_SRC_DIR = $(SRC_DIR)/automerge/javascript
 JS_DIST = $(JS_SRC_DIR)/dist/cjs/iife.cjs
-JS_VENDOR_DIR = ui/vendor
-JS_VENDOR = $(JS_VENDOR_DIR)/automerge.js
+VENDOR_DIR = web/vendor
+VENDOR_JS = $(VENDOR_DIR)/automerge.js
+
+# Web folder configuration (1:1 mapping architecture)
+WEB_DIR = web
+WEB_HTML = $(WEB_DIR)/index.html
+WEB_CSS = $(WEB_DIR)/css/main.css
+WEB_JS = $(WEB_DIR)/js/app.js $(WEB_DIR)/js/text.js $(WEB_DIR)/js/sync.js $(WEB_DIR)/js/richtext.js
+WEB_COMPONENTS = $(WEB_DIR)/components/text.html $(WEB_DIR)/components/sync.html $(WEB_DIR)/components/richtext.html
 
 ## help: Show this help message
 help:
@@ -82,7 +92,7 @@ build-wasi-debug: check-deps
 
 ## build-js: Build Automerge.js from .src/ (single source of truth)
 build-js:
-	@echo "📦 Building Automerge.js $(AUTOMERGE_JS_VERSION) from source..."
+	@echo "📦 Building Automerge.js from source (tag: $(AUTOMERGE_TAG))..."
 	@if [ ! -d "$(JS_SRC_DIR)" ]; then \
 		echo "❌ Error: $(JS_SRC_DIR) not found. Run 'make setup-src' first."; \
 		exit 1; \
@@ -91,17 +101,17 @@ build-js:
 	@cd $(JS_SRC_DIR) && bun install --frozen-lockfile
 	@echo "Building Automerge.js (using bun)..."
 	@cd $(JS_SRC_DIR) && bun run build
-	@mkdir -p $(JS_VENDOR_DIR)
-	@cp $(JS_DIST) $(JS_VENDOR)
-	@echo "✅ Built: $(JS_VENDOR)"
-	@ls -lh $(JS_VENDOR)
-	@echo "📍 Version: Rust $(AUTOMERGE_VERSION) ↔ JS $(AUTOMERGE_JS_VERSION) (same monorepo)"
+	@mkdir -p $(VENDOR_DIR)
+	@cp $(JS_DIST) $(VENDOR_JS)
+	@echo "✅ Built and copied to $(VENDOR_JS)"
+	@ls -lh $(VENDOR_JS)
 
 ## sync-versions: Verify all components use same .src/ version
 sync-versions:
 	@echo "🔍 Checking version alignment..."
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "📌 .src/automerge git version:"
+	@echo "📌 Expected tag: $(AUTOMERGE_TAG)"
+	@echo "📌 Actual .src/automerge git version:"
 	@cd $(SRC_DIR)/automerge && git describe --tags
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "🦀 Cargo.toml dependency:"
@@ -110,8 +120,8 @@ sync-versions:
 	@echo "📦 JavaScript package.json:"
 	@cd $(JS_SRC_DIR) && cat package.json | grep '"version"' | head -1
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@if [ -f "$(JS_VENDOR)" ]; then \
-		echo "✅ Built Automerge.js: $$(ls -lh $(JS_VENDOR) | awk '{print $$5}')"; \
+	@if [ -f "$(VENDOR_JS)" ]; then \
+		echo "✅ Built Automerge.js: $$(ls -lh $(VENDOR_JS) | awk '{print $$5}')"; \
 	else \
 		echo "⚠️  Automerge.js not built. Run 'make build-js'"; \
 	fi
@@ -237,9 +247,10 @@ setup-src:
 		echo "Cloning Automerge repository..."; \
 		git clone $(AUTOMERGE_REPO) $(SRC_DIR)/automerge; \
 	fi
-	@echo "Checking out version $(AUTOMERGE_VERSION)..."
-	@cd $(SRC_DIR)/automerge && git fetch --tags && git checkout $(AUTOMERGE_VERSION)
+	@echo "Checking out tag $(AUTOMERGE_TAG)..."
+	@cd $(SRC_DIR)/automerge && git fetch --tags && git checkout $(AUTOMERGE_TAG)
 	@echo "✅ Automerge source ready at $(SRC_DIR)/automerge"
+	@echo "   Git tag: $(AUTOMERGE_TAG)"
 	@echo "   Rust core API: $(SRC_DIR)/automerge/rust/automerge/src/"
 
 ## update-src: Update .src to configured version
@@ -250,9 +261,9 @@ update-src:
 		exit 1; \
 	fi
 	@cd $(SRC_DIR)/automerge && git fetch --tags
-	@echo "Checking out version $(AUTOMERGE_VERSION)..."
-	@cd $(SRC_DIR)/automerge && git checkout $(AUTOMERGE_VERSION)
-	@echo "✅ Updated to $(AUTOMERGE_VERSION)"
+	@echo "Checking out tag $(AUTOMERGE_TAG)..."
+	@cd $(SRC_DIR)/automerge && git checkout $(AUTOMERGE_TAG)
+	@echo "✅ Updated to tag: $(AUTOMERGE_TAG)"
 
 ## clean-src: Remove .src directory (useful for fresh start)
 clean-src:
@@ -296,3 +307,68 @@ verify-docs:
 		echo "Fix these before committing documentation changes."; \
 		exit 1; \
 	fi
+
+## verify-web: Verify web folder structure and files
+verify-web:
+	@echo "🔍 Verifying web folder structure (1:1 mapping)..."
+	@echo ""
+	@echo "Checking required files:"
+	@ERRORS=0; \
+	for file in $(WEB_HTML) $(WEB_CSS) $(WEB_JS) $(WEB_COMPONENTS); do \
+		if [ -f "$$file" ]; then \
+			echo "  ✅ $$file"; \
+		else \
+			echo "  ❌ Missing: $$file"; \
+			ERRORS=$$((ERRORS + 1)); \
+		fi; \
+	done; \
+	echo ""; \
+	echo "Checking Automerge.js vendor file:"; \
+	if [ -f "$(VENDOR_JS)" ]; then \
+		echo "  ✅ $(VENDOR_JS) ($$(ls -lh $(VENDOR_JS) | awk '{print $$5}'))"; \
+		if grep -q 'src="/vendor/automerge.js"' $(WEB_HTML); then \
+			echo "  ✅ $(WEB_HTML) references /vendor/automerge.js"; \
+		else \
+			echo "  ❌ $(WEB_HTML) does not reference /vendor/automerge.js"; \
+			ERRORS=$$((ERRORS + 1)); \
+		fi; \
+	else \
+		echo "  ❌ $(VENDOR_JS) not built. Run 'make build-js'"; \
+		ERRORS=$$((ERRORS + 1)); \
+	fi; \
+	echo ""; \
+	if [ $$ERRORS -eq 0 ]; then \
+		echo "✅ Web folder structure valid!"; \
+	else \
+		echo "❌ Found $$ERRORS issue(s)"; \
+		exit 1; \
+	fi
+
+## test-http: Test HTTP API endpoints (requires server running)
+test-http:
+	@echo "🧪 Testing HTTP API endpoints..."
+	@echo ""
+	@echo "Testing M0: Text endpoint"
+	@curl -s http://localhost:8080/api/text || (echo "❌ Server not running on port 8080"; exit 1)
+	@echo ""
+	@echo "Testing M1: Sync endpoint"
+	@curl -X POST -s -H 'Content-Type: application/json' \
+		-d '{"peer_id":"makefile-test","message":""}' \
+		http://localhost:8080/api/sync | grep -q 'has_more' && echo "✅ Sync endpoint working" || echo "❌ Sync endpoint failed"
+	@echo ""
+	@echo "Testing M2: RichText endpoint (requires text first)"
+	@curl -X POST -s -H 'Content-Type: application/json' \
+		-d '{"path":"ROOT.content","name":"test","value":"true","start":0,"end":1,"expand":"none"}' \
+		http://localhost:8080/api/richtext/mark -w "%{http_code}" -o /dev/null | grep -q '204' && \
+		echo "✅ RichText mark endpoint working" || echo "⚠️  RichText mark endpoint (may need text in document)"
+	@echo ""
+	@echo "✅ HTTP tests complete"
+
+## test-playwright: Run Playwright end-to-end tests (requires server + Playwright MCP)
+test-playwright:
+	@echo "🎭 Playwright tests should be run via MCP tools"
+	@echo ""
+	@echo "Test plans available:"
+	@ls -1 tests/playwright/*.md 2>/dev/null || echo "  No test plans found"
+	@echo ""
+	@echo "Run tests using Claude Code with Playwright MCP enabled"

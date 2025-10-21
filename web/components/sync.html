@@ -1,0 +1,49 @@
+<!-- M1: Sync Protocol Component -->
+<div class="component-container">
+    <h2>🔄 Sync Protocol (M1)</h2>
+    <p class="description">
+        Automerge sync protocol for efficient delta-based synchronization.
+        Each peer maintains sync state and exchanges binary messages.
+    </p>
+
+    <div class="sync-demo">
+        <div class="form-section">
+            <h3>Peer Information</h3>
+            <div class="form-row">
+                <label>Peer ID:</label>
+                <input type="text" id="sync-peer-id" placeholder="peer-1" value="browser-peer" />
+                <button id="sync-init" class="btn btn-primary">Initialize Sync</button>
+            </div>
+            <div id="sync-peer-status" class="status-text"></div>
+        </div>
+
+        <div class="form-section">
+            <h3>Send Sync Message</h3>
+            <p class="help-text">
+                Generate and send a sync message to the server.
+                The server will respond with its own sync message if needed.
+            </p>
+            <button id="sync-send" class="btn btn-primary">📤 Send Sync Message</button>
+            <div id="sync-response" class="code-block"></div>
+        </div>
+
+        <div class="data-display">
+            <h3>Sync Log</h3>
+            <button id="sync-clear-log" class="btn btn-secondary btn-small">Clear Log</button>
+            <div id="sync-log" class="log-display"></div>
+        </div>
+    </div>
+
+    <div class="help-section">
+        <h3>How it works:</h3>
+        <ul>
+            <li>Initialize sync state with a unique peer ID</li>
+            <li>Server maintains per-peer sync state</li>
+            <li>Send sync messages to exchange document changes</li>
+            <li>Responses contain sync messages and "has_more" flag</li>
+            <li>Messages are Base64-encoded binary data</li>
+        </ul>
+        <h3>API Endpoints:</h3>
+        <code>POST /api/sync</code> - Exchange sync messages
+    </div>
+</div>

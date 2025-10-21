@@ -53,6 +53,8 @@ mod counter;
 mod history;
 mod sync;
 mod richtext;
+mod cursor;
+mod generic;
 
 // Re-export all public FFI functions
 pub use memory::*;
@@ -64,3 +66,5 @@ pub use counter::*;
 pub use history::*;
 pub use sync::*;
 pub use richtext::*;
+pub use cursor::*;
+pub use generic::*;
