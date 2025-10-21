@@ -172,7 +172,32 @@ After ANY changes to the API layer:
 - [ ] Every wrapper in `pkg/wazero/` is used by `pkg/automerge/`
 - [ ] `docs/reference/api-mapping.md` is updated with coverage status
 - [ ] Tests verify the integration works
+- [ ] **⚠️ NEW FILES: Layer markers added** (see Section 0.3.1)
 - [ ] `make build-wasi && make test-go` passes
+
+### 🏗️ Deployment Architecture (CRITICAL)
+
+**Model**: Go wrapper around Automerge Rust WASM, deployed locally per device
+
+```
+Browser (JS) → HTTP → Go Server → wazero → WASM (Rust Automerge)
+```
+
+**Current (M0-M2)**: Centralized server (one Go instance, many browsers)
+**Target (M3+)**: Local-first (Go server per device, NATS sync)
+
+**Key Points**:
+- We built **custom HTTP/JSON APIs** around Automerge (not using Automerge.js)
+- Server runs **locally on each device** (desktop, mobile via gomobile)
+- Browser is a thin UI connecting to `localhost:8080`
+- NATS syncs between local servers (M3)
+
+**For AI Agents - DO NOT SUGGEST**:
+- ❌ Running WASI in browser (syscall limitations, need `wasm32-unknown-unknown`)
+- ❌ Integrating Automerge.js (API mismatch with our HTTP layer)
+- ❌ Changing from local server model (this is the correct architecture)
+
+**See**: **[Deployment Architecture](docs/explanation/deployment-architecture.md)** for complete rationale.
 
 ---
 
@@ -282,9 +307,11 @@ make verify-docs && git add docs/ *.md && git commit
 - ✅ FFI exports have parameter/return documentation
 - ✅ Documentation structure (Section 0.3)
 - ✅ Analysis document created
+- ✅ **Layer markers template** (docs/templates/layer-markers.md)
+- ✅ **Layer markers proof of concept** (5 files in text.* chain)
 
 **In Progress** (See [AI Readability Improvements](docs/explanation/ai-readability-improvements.md)):
-- 🚧 Layer markers (0/77 files have them)
+- 🚧 Layer markers (5/77 files completed - text.* chain done)
 - 🚧 Error code enum (still using magic numbers)
 - 🚧 FFI safety contracts (partial coverage)
 - 🚧 Decision logs (docs/decisions/ not created yet)
@@ -306,6 +333,69 @@ make verify-docs && git add docs/ *.md && git commit
 
 **"I need to add a new module"**
 → Follow the 1:1 mapping: create files in all 6 layers (Section 0.2)
+→ **CRITICAL**: Add layer markers to EVERY new file (see below)
+
+### ⚠️ CRITICAL: Adding Layer Markers to New Code
+
+**RULE**: Every new file in layers 2-6 MUST have a layer marker at the top.
+
+**When creating a new file**:
+1. Open [docs/templates/layer-markers.md](docs/templates/layer-markers.md)
+2. Copy the template for your layer (2-6)
+3. Paste at the **very top** of the file (before `package` or module docs)
+4. Replace `<module>` with actual module name (e.g., `text`, `cursor`, `graph`)
+5. Update the sibling list with related files in the same layer
+
+**Example - Creating a new "cursor" module**:
+
+```rust
+// ═══════════════════════════════════════════════════════════════
+// LAYER 2: Rust WASI Exports (C-ABI for FFI)
+//
+// Responsibilities:
+// - Export C-ABI functions callable from Go via wazero
+// - Validate UTF-8 input from Go side
+// - Call Automerge Rust API for CRDT operations
+// - Return error codes as i32 (0 = success, <0 = error)
+//
+// Dependencies:
+// ⬇️  Calls: automerge crate (Layer 1 - CRDT core)
+// ⬆️  Called by: go/pkg/wazero/cursor.go (Layer 3 - Go FFI wrappers)
+//
+// Related Files:
+// 🔁 Siblings: text.rs, map.rs, list.rs, counter.rs, sync.rs
+// 📝 Tests: cargo test (Rust unit tests)
+// 🔗 Docs: docs/explanation/architecture.md#layer-2-rust-wasi
+// ═══════════════════════════════════════════════════════════════
+
+//! Cursor operations for stable position tracking
+//!
+//! Provides functions to get and lookup cursor positions...
+
+use automerge::{ReadDoc, Cursor};
+use crate::state::{with_doc};
+
+#[no_mangle]
+pub extern "C" fn am_cursor_get(...) -> i32 {
+    // Implementation
+}
+```
+
+**Why this is CRITICAL**:
+- Future AI agents will read these markers to understand context
+- Without markers, AI must read entire files to figure out layer responsibilities
+- Markers prevent AI from putting wrong logic in wrong layer (e.g., HTTP parsing in Layer 4)
+- Consistency across codebase makes navigation predictable
+
+**Current Status**:
+- ✅ **text.* chain** has markers (5 files) - use these as reference!
+- ❌ Other modules (map, list, counter, sync, richtext) - no markers yet
+- 📋 See actual examples in:
+  - [rust/automerge_wasi/src/text.rs](rust/automerge_wasi/src/text.rs)
+  - [go/pkg/wazero/text.go](go/pkg/wazero/text.go)
+  - [go/pkg/automerge/text.go](go/pkg/automerge/text.go)
+  - [go/pkg/server/text.go](go/pkg/server/text.go)
+  - [go/pkg/api/handlers.go](go/pkg/api/handlers.go)
 
 ### Verification
 
