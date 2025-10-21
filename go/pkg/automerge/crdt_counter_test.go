@@ -7,7 +7,7 @@ import (
 
 func TestCounter_Increment(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -38,7 +38,7 @@ func TestCounter_Increment(t *testing.T) {
 
 func TestCounter_Decrement(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -59,7 +59,7 @@ func TestCounter_Decrement(t *testing.T) {
 
 func TestCounter_SaveLoad(t *testing.T) {
 	ctx := context.Background()
-	doc1, err := New(ctx)
+	doc1, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestCounter_SaveLoad(t *testing.T) {
 		t.Fatalf("Save failed: %v", err)
 	}
 
-	doc2, err := Load(ctx, data)
+	doc2, err := LoadWithWASM(ctx, data, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Load failed: %v", err)
 	}

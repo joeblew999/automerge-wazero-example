@@ -11,7 +11,7 @@ import (
 func newTestDoc(t *testing.T) (*automerge.Document, context.Context) {
 	t.Helper()
 	ctx := context.Background()
-	doc, err := automerge.New(ctx)
+	doc, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 	if err != nil {
 		t.Fatalf("New() failed: %v", err)
 	}

@@ -8,7 +8,7 @@ import (
 // TestMap_PutGet tests basic map operations
 func TestMap_PutGet(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -56,7 +56,7 @@ func TestMap_PutGet(t *testing.T) {
 // TestMap_Delete tests deletion of map keys
 func TestMap_Delete(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -116,7 +116,7 @@ func TestMap_Delete(t *testing.T) {
 // TestMap_Keys tests retrieving all map keys
 func TestMap_Keys(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -166,7 +166,7 @@ func TestMap_Keys(t *testing.T) {
 // TestMap_Length tests map length calculation
 func TestMap_Length(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -202,7 +202,7 @@ func TestMap_Length(t *testing.T) {
 // TestMap_Overwrite tests overwriting existing keys
 func TestMap_Overwrite(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -247,7 +247,7 @@ func TestMap_Overwrite(t *testing.T) {
 // TestMap_EmptyKey tests edge case of empty string key
 func TestMap_EmptyKey(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -272,7 +272,7 @@ func TestMap_EmptyKey(t *testing.T) {
 // TestMap_NonStringValue tests that non-string values return NotImplementedError
 func TestMap_NonStringValue(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -305,7 +305,7 @@ func TestMap_SaveLoad(t *testing.T) {
 	ctx := context.Background()
 
 	// Create document and add data
-	doc1, err := New(ctx)
+	doc1, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -330,7 +330,7 @@ func TestMap_SaveLoad(t *testing.T) {
 	}
 
 	// Load into new document
-	doc2, err := Load(ctx, data)
+	doc2, err := LoadWithWASM(ctx, data, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Load failed: %v", err)
 	}
@@ -362,7 +362,7 @@ func TestMap_SaveLoad(t *testing.T) {
 // TestMap_NestedNotSupported tests that nested maps return NotImplementedError
 func TestMap_NestedNotSupported(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}

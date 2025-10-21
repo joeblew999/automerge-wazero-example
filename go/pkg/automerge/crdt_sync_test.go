@@ -7,7 +7,7 @@ import (
 
 func TestDocument_InitSyncState(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -29,7 +29,7 @@ func TestDocument_InitSyncState(t *testing.T) {
 
 func TestDocument_GenerateSyncMessage(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -59,7 +59,7 @@ func TestDocument_Sync_TwoDocuments(t *testing.T) {
 	ctx := context.Background()
 
 	// Create document A with some content
-	docA, err := New(ctx)
+	docA, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document A: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestDocument_Sync_TwoDocuments(t *testing.T) {
 	}
 
 	// Create empty document B
-	docB, err := New(ctx)
+	docB, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document B: %v", err)
 	}

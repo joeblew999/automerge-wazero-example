@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/joeblew999/automerge-wazero-example/pkg/server"
 )
@@ -78,8 +79,17 @@ func CounterGetHandler(srv *server.Server) http.HandlerFunc {
 
 		value, err := srv.GetCounter(ctx, parsePathString(path), key)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Failed to get counter: %v", err), http.StatusInternalServerError)
-			return
+			// Handle "key not found" error (WASM code -2) - return 0 for non-existent counters
+			errStr := err.Error()
+			if strings.Contains(errStr, "code -2") ||
+			   strings.Contains(errStr, "not found") ||
+			   strings.Contains(errStr, "invalid value") {
+				log.Printf("Counter not found (returning 0): path=%s, key=%s", path, key)
+				value = 0
+			} else {
+				http.Error(w, fmt.Sprintf("Failed to get counter: %v", err), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")

@@ -70,7 +70,7 @@ func TestText_SpliceOperations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			doc, err := automerge.New(ctx)
+			doc, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 			if err != nil {
 				t.Fatalf("New() failed: %v", err)
 			}
@@ -134,7 +134,7 @@ func TestText_Unicode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			doc, err := automerge.New(ctx)
+			doc, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 			if err != nil {
 				t.Fatalf("New() failed: %v", err)
 			}
@@ -192,7 +192,7 @@ func TestText_Length(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			doc, err := automerge.New(ctx)
+			doc, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 			if err != nil {
 				t.Fatalf("New() failed: %v", err)
 			}

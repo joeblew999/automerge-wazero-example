@@ -7,7 +7,7 @@ import (
 
 func TestDocument_Mark_Basic(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestDocument_Mark_Basic(t *testing.T) {
 
 func TestDocument_Mark_Multiple(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestDocument_Mark_Multiple(t *testing.T) {
 
 func TestDocument_Unmark(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -106,7 +106,7 @@ func TestDocument_Unmark(t *testing.T) {
 
 func TestDocument_Marks(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -157,7 +157,7 @@ func TestDocument_Marks(t *testing.T) {
 
 func TestDocument_GetMarks_AtPosition(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -239,7 +239,7 @@ func TestDocument_Mark_LinkExample(t *testing.T) {
 
 func TestDocument_Mark_ExpandModes(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -282,7 +282,7 @@ func TestDocument_Mark_SaveLoad(t *testing.T) {
 	ctx := context.Background()
 
 	// Create document with marks
-	doc1, err := New(ctx)
+	doc1, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -311,7 +311,7 @@ func TestDocument_Mark_SaveLoad(t *testing.T) {
 	doc1.Close(ctx)
 
 	// Load
-	doc2, err := Load(ctx, data)
+	doc2, err := LoadWithWASM(ctx, data, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to load: %v", err)
 	}

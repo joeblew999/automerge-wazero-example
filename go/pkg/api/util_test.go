@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/joeblew999/automerge-wazero-example/pkg/automerge"
 	"github.com/joeblew999/automerge-wazero-example/pkg/server"
 )
 
@@ -20,6 +21,7 @@ func newTestServer(t *testing.T) *server.Server {
 	srv := server.New(server.Config{
 		StorageDir: t.TempDir(),
 		UserID:     "test-user",
+		WASMPath:   automerge.TestWASMPath,
 	})
 
 	if err := srv.Initialize(ctx); err != nil {

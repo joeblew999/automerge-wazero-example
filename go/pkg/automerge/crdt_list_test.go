@@ -7,7 +7,7 @@ import (
 
 func TestList_PushGet(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -43,7 +43,7 @@ func TestList_PushGet(t *testing.T) {
 
 func TestList_Insert(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestList_Insert(t *testing.T) {
 
 func TestList_Delete(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -103,7 +103,7 @@ func TestList_Delete(t *testing.T) {
 
 func TestList_SaveLoad(t *testing.T) {
 	ctx := context.Background()
-	doc1, err := New(ctx)
+	doc1, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Failed to create document: %v", err)
 	}
@@ -118,7 +118,7 @@ func TestList_SaveLoad(t *testing.T) {
 		t.Fatalf("Save failed: %v", err)
 	}
 
-	doc2, err := Load(ctx, data)
+	doc2, err := LoadWithWASM(ctx, data, TestWASMPath)
 	if err != nil {
 		t.Fatalf("Load failed: %v", err)
 	}

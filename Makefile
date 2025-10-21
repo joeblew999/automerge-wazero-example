@@ -136,14 +136,14 @@ build-server:
 ## run: Build and run the Go server (release build)
 run: build-wasi
 	@echo "🚀 Starting Go server on port $(PORT)..."
-	@echo "   Config: PORT=$(PORT) STORAGE_DIR=.. WASM_PATH=$(WASM_RELEASE)"
-	cd $(GO_DIR) && STORAGE_DIR=.. PORT=$(PORT) WASM_PATH=../../../$(WASM_RELEASE) go run main.go
+	@echo "   Config: PORT=$(PORT) STORAGE_DIR=.. WEB_PATH=../../../web WASM_PATH=$(WASM_RELEASE)"
+	cd $(GO_DIR) && STORAGE_DIR=.. PORT=$(PORT) WEB_PATH=../../../web WASM_PATH=../../../$(WASM_RELEASE) go run main.go
 
 ## dev: Build (debug) and run the Go server (faster iteration)
 dev: build-wasi-debug
 	@echo "🚀 Starting Go server in dev mode on port $(PORT)..."
-	@echo "   Config: PORT=$(PORT) STORAGE_DIR=.. WASM_PATH=$(WASM_DEBUG)"
-	cd $(GO_DIR) && STORAGE_DIR=.. PORT=$(PORT) WASM_PATH=../../../$(WASM_DEBUG) go run main.go
+	@echo "   Config: PORT=$(PORT) STORAGE_DIR=.. WEB_PATH=../../../web WASM_PATH=$(WASM_DEBUG)"
+	cd $(GO_DIR) && STORAGE_DIR=.. PORT=$(PORT) WEB_PATH=../../../web WASM_PATH=../../../$(WASM_DEBUG) go run main.go
 
 ## watch: Watch for changes and auto-rebuild (requires air)
 watch:

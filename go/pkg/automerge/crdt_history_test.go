@@ -7,7 +7,7 @@ import (
 
 func TestDocument_GetHeads(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -31,7 +31,7 @@ func TestDocument_GetHeads(t *testing.T) {
 
 func TestDocument_GetChanges(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestDocument_GetChanges(t *testing.T) {
 
 func TestDocument_GetChanges_Empty(t *testing.T) {
 	ctx := context.Background()
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestDocument_ApplyChanges(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a document
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}
@@ -121,7 +121,7 @@ func TestDocument_ApplyChanges_Incremental(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a document
-	doc, err := New(ctx)
+	doc, err := NewWithWASM(ctx, TestWASMPath)
 	if err != nil {
 		t.Fatalf("failed to create document: %v", err)
 	}

@@ -19,7 +19,7 @@ func testdataPath(filename string) string {
 func TestNew(t *testing.T) {
 	ctx := context.Background()
 
-	doc, err := automerge.New(ctx)
+	doc, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -45,7 +45,7 @@ func TestNew(t *testing.T) {
 func TestDocument_SpliceText(t *testing.T) {
 	ctx := context.Background()
 
-	doc, err := automerge.New(ctx)
+	doc, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -114,7 +114,7 @@ func TestDocument_SpliceText(t *testing.T) {
 func TestDocument_SpliceText_Unicode(t *testing.T) {
 	ctx := context.Background()
 
-	doc, err := automerge.New(ctx)
+	doc, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -142,7 +142,7 @@ func TestDocument_SpliceText_Unicode(t *testing.T) {
 func TestDocument_TextLength(t *testing.T) {
 	ctx := context.Background()
 
-	doc, err := automerge.New(ctx)
+	doc, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -179,7 +179,7 @@ func TestDocument_SaveAndLoad(t *testing.T) {
 	ctx := context.Background()
 
 	// Create document with content
-	doc1, err := automerge.New(ctx)
+	doc1, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -202,7 +202,7 @@ func TestDocument_SaveAndLoad(t *testing.T) {
 	}
 
 	// Load into new document
-	doc2, err := automerge.Load(ctx, data)
+	doc2, err := automerge.LoadWithWASM(ctx, data, automerge.TestWASMPath)
 	if err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}
@@ -256,7 +256,7 @@ func TestDocument_LoadFromTestData(t *testing.T) {
 				t.Fatalf("Failed to read test file %s: %v", tt.filename, err)
 			}
 
-			doc, err := automerge.Load(ctx, data)
+			doc, err := automerge.LoadWithWASM(ctx, data, automerge.TestWASMPath)
 			if err != nil {
 				t.Fatalf("Load(%s) error = %v", tt.filename, err)
 			}
@@ -282,13 +282,13 @@ func TestDocument_Merge(t *testing.T) {
 	ctx := context.Background()
 
 	// Create two documents that share the same WASM runtime
-	doc1, err := automerge.New(ctx)
+	doc1, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 	if err != nil {
 		t.Fatalf("New(doc1) error = %v", err)
 	}
 	defer doc1.Close(ctx)
 
-	doc2, err := automerge.New(ctx)
+	doc2, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 	if err != nil {
 		t.Fatalf("New(doc2) error = %v", err)
 	}
@@ -333,7 +333,7 @@ func TestDocument_Merge(t *testing.T) {
 func TestDocument_Get_NotImplemented(t *testing.T) {
 	ctx := context.Background()
 
-	doc, err := automerge.New(ctx)
+	doc, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -493,7 +493,7 @@ func TestDeprecatedError(t *testing.T) {
 func BenchmarkSpliceText(b *testing.B) {
 	ctx := context.Background()
 
-	doc, err := automerge.New(ctx)
+	doc, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 	if err != nil {
 		b.Fatalf("New() error = %v", err)
 	}
@@ -513,7 +513,7 @@ func BenchmarkSaveLoad(b *testing.B) {
 	ctx := context.Background()
 
 	// Create document with some content
-	doc, err := automerge.New(ctx)
+	doc, err := automerge.NewWithWASM(ctx, automerge.TestWASMPath)
 	if err != nil {
 		b.Fatalf("New() error = %v", err)
 	}
@@ -529,7 +529,7 @@ func BenchmarkSaveLoad(b *testing.B) {
 			b.Fatalf("Save() error = %v", err)
 		}
 
-		doc2, err := automerge.Load(ctx, data)
+		doc2, err := automerge.LoadWithWASM(ctx, data, automerge.TestWASMPath)
 		if err != nil {
 			b.Fatalf("Load() error = %v", err)
 		}
