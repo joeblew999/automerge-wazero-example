@@ -1,0 +1,162 @@
+<!-- Cursor Operations Component -->
+<div class="component-container">
+    <h2>Cursor Operations</h2>
+    <p class="description">
+        Cursors provide stable position tracking across concurrent edits.
+        A cursor at position N will automatically adjust when text is inserted/deleted before it.
+    </p>
+
+    <div class="editor-section">
+        <div class="form-group">
+            <label for="cursor-path">Path:</label>
+            <input type="text" id="cursor-path" class="input-field" placeholder="ROOT.content" value="ROOT.content">
+        </div>
+
+        <div class="form-group">
+            <label for="cursor-text">Text Content:</label>
+            <textarea id="cursor-text" class="editor-textarea" rows="6" placeholder="Type or load text..."></textarea>
+            <div class="controls">
+                <button id="cursor-load-text" class="btn btn-secondary">📥 Load Text</button>
+                <button id="cursor-save-text" class="btn btn-primary">💾 Save Text</button>
+            </div>
+            <div class="info-text" id="cursor-selection-info">Selection: 0-0 (0 chars)</div>
+        </div>
+
+        <div class="section-divider">
+            <h3>Get Cursor</h3>
+        </div>
+
+        <div class="form-group">
+            <label for="cursor-index">Index Position:</label>
+            <input type="number" id="cursor-index" class="input-field" placeholder="0" min="0">
+        </div>
+
+        <div class="controls">
+            <button id="cursor-get" class="btn btn-primary">🎯 Get Cursor at Index</button>
+            <button id="cursor-get-selection" class="btn btn-secondary">📍 Get Cursor at Selection</button>
+        </div>
+
+        <div id="cursor-display" class="result-box">
+            <div class="empty-message">No cursor retrieved yet</div>
+        </div>
+
+        <div class="section-divider">
+            <h3>Lookup Cursor</h3>
+        </div>
+
+        <div class="form-group">
+            <label for="cursor-input">Cursor Value:</label>
+            <input type="text" id="cursor-input" class="input-field" placeholder="Paste cursor value here">
+        </div>
+
+        <div class="controls">
+            <button id="cursor-lookup" class="btn btn-primary">🔍 Lookup Current Position</button>
+        </div>
+
+        <div id="cursor-lookup-result" class="result-box">
+            <div class="empty-message">No lookup performed yet</div>
+        </div>
+
+        <div class="section-divider">
+            <h3>Demo</h3>
+        </div>
+
+        <div class="controls">
+            <button id="cursor-demo" class="btn btn-success">▶️ Run Cursor Demo</button>
+        </div>
+
+        <div class="info-bar">
+            <span id="cursor-status" class="status-text"></span>
+        </div>
+    </div>
+
+    <div class="history-section">
+        <h3>Recent Cursors:</h3>
+        <div id="cursor-history" class="cursor-history">
+            <div class="empty-message">No cursors saved yet</div>
+        </div>
+    </div>
+
+    <div class="help-section">
+        <h3>How it works:</h3>
+        <ul>
+            <li><strong>Get Cursor:</strong> Create a cursor at a specific position in the text</li>
+            <li><strong>Lookup Cursor:</strong> Find the current position of a previously saved cursor</li>
+            <li><strong>Stable Positions:</strong> Cursors adjust automatically when text is edited</li>
+            <li><strong>Demo:</strong> Shows cursor tracking across edits:
+                <ol>
+                    <li>Set text to "Hello World"</li>
+                    <li>Get cursor at position 6 (after "Hello ")</li>
+                    <li>Insert "Hi " at the beginning</li>
+                    <li>Lookup cursor → Position updates from 6 to 9</li>
+                </ol>
+            </li>
+        </ul>
+        <h3>API Endpoints:</h3>
+        <code>GET /api/cursor?path=ROOT.content&index=5</code> - Get cursor<br>
+        <code>POST /api/cursor/lookup {path, cursor}</code> - Lookup position
+    </div>
+</div>
+
+<style>
+.section-divider {
+    margin: 2rem 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.section-divider h3 {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.result-box {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.cursor-info {
+    font-family: monospace;
+    line-height: 1.6;
+}
+
+.cursor-info code {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.lookup-result {
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+.cursor-history {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.history-item {
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.history-item small {
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+}
+
+.info-text {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+</style>

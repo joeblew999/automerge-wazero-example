@@ -1,0 +1,137 @@
+<!-- M0: Counter CRDT Component -->
+<div class="component-container">
+    <h2>Counter CRDT</h2>
+    <p class="description">
+        Conflict-free counter that supports concurrent increments and decrements.
+        Counters are commutative (order-independent) and associative.
+    </p>
+
+    <div class="counter-display">
+        <div class="counter-large">
+            <span id="counter-value" class="counter-number">0</span>
+        </div>
+    </div>
+
+    <div class="editor-section">
+        <div class="form-group">
+            <label for="counter-path">Path:</label>
+            <input type="text" id="counter-path" class="input-field" placeholder="ROOT" value="ROOT">
+        </div>
+
+        <div class="form-group">
+            <label for="counter-key">Key:</label>
+            <input type="text" id="counter-key" class="input-field" placeholder="counter" value="counter">
+        </div>
+
+        <div class="form-group">
+            <label for="counter-delta">Custom Delta:</label>
+            <input type="number" id="counter-delta" class="input-field" placeholder="1" value="1">
+        </div>
+
+        <div class="controls">
+            <button id="counter-increment" class="btn btn-primary">➕ Increment (+1)</button>
+            <button id="counter-decrement" class="btn btn-secondary">➖ Decrement (-1)</button>
+            <button id="counter-add-custom" class="btn btn-secondary">🔢 Add Custom</button>
+            <button id="counter-refresh" class="btn btn-secondary">🔄 Refresh</button>
+            <button id="counter-reset" class="btn btn-danger">🔃 Reset to 0</button>
+        </div>
+
+        <div class="quick-controls">
+            <h4>Quick Actions:</h4>
+            <div class="button-group">
+                <button id="counter-plus-1" class="btn-small btn-success">+1</button>
+                <button id="counter-plus-5" class="btn-small btn-success">+5</button>
+                <button id="counter-plus-10" class="btn-small btn-success">+10</button>
+                <button id="counter-minus-1" class="btn-small btn-warning">-1</button>
+                <button id="counter-minus-5" class="btn-small btn-warning">-5</button>
+                <button id="counter-minus-10" class="btn-small btn-warning">-10</button>
+            </div>
+        </div>
+
+        <div class="info-bar">
+            <span id="counter-status" class="status-text"></span>
+        </div>
+    </div>
+
+    <div class="help-section">
+        <h3>How it works:</h3>
+        <ul>
+            <li><strong>Increment/Decrement:</strong> Add or subtract 1 from the counter</li>
+            <li><strong>Custom Delta:</strong> Add or subtract any integer value</li>
+            <li><strong>Quick Actions:</strong> Pre-defined increment/decrement buttons</li>
+            <li>Multiple clients can update the same counter concurrently</li>
+            <li>All updates are commutative - order doesn't matter</li>
+            <li>Changes propagate via SSE to all connected clients</li>
+        </ul>
+        <h3>API Endpoints:</h3>
+        <code>GET /api/counter?path=ROOT&key=counter</code> - Get value<br>
+        <code>POST /api/counter {path, key, delta}</code> - Increment by delta<br>
+        <code>POST /api/counter/increment {path, key, delta}</code> - Increment
+    </div>
+</div>
+
+<style>
+.counter-display {
+    text-align: center;
+    margin: 2rem 0;
+    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+}
+
+.counter-large {
+    font-size: 4rem;
+    font-weight: bold;
+    color: white;
+}
+
+.counter-number {
+    display: inline-block;
+    min-width: 150px;
+}
+
+.counter-flash {
+    animation: flash 0.3s ease-in-out;
+}
+
+@keyframes flash {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); color: #ffd700; }
+}
+
+.quick-controls {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.quick-controls h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-success {
+    background: #48bb78;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #38a169;
+}
+
+.btn-warning {
+    background: #ed8936;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #dd6b20;
+}
+</style>

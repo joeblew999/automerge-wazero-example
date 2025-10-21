@@ -15,7 +15,8 @@ import (
 
 const (
 	// Default WASM module path (can be overridden)
-	defaultWASMPath = "../../../rust/automerge_wasi/target/wasm32-wasip1/release/automerge_wasi.wasm"
+	// Relative to go/ directory when running: go run cmd/server/main.go
+	defaultWASMPath = "../rust/automerge_wasi/target/wasm32-wasip1/release/automerge_wasi.wasm"
 )
 
 // Runtime wraps the Wazero runtime and provides access to WASM exports

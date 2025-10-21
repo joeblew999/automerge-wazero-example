@@ -1,0 +1,137 @@
+<!-- M0: History Component -->
+<div class="component-container">
+    <h2>Document History</h2>
+    <p class="description">
+        View document version history, heads, and changes.
+        Automerge tracks all changes to enable time-travel and synchronization.
+    </p>
+
+    <div class="controls">
+        <button id="history-refresh" class="btn btn-primary">🔄 Refresh All</button>
+        <button id="history-get-heads" class="btn btn-secondary">📍 Get Heads</button>
+        <button id="history-get-changes" class="btn btn-secondary">📜 Get Changes</button>
+        <button id="history-download-snapshot" class="btn btn-success">💾 Download Snapshot</button>
+    </div>
+
+    <div class="info-bar">
+        <span id="history-status" class="status-text"></span>
+    </div>
+
+    <div class="history-section">
+        <h3>Current Heads</h3>
+        <p class="section-description">
+            Heads represent the current state of the document. Multiple heads indicate concurrent edits.
+        </p>
+        <div id="history-heads" class="heads-display">
+            <div class="empty-message">Loading...</div>
+        </div>
+    </div>
+
+    <div class="history-section">
+        <h3>Changes</h3>
+        <p class="section-description">
+            All changes (edits) to the document, encoded as binary data.
+        </p>
+        <div id="history-changes" class="changes-display">
+            <div class="empty-message">Loading...</div>
+        </div>
+    </div>
+
+    <div class="help-section">
+        <h3>How it works:</h3>
+        <ul>
+            <li><strong>Heads:</strong> Hash identifiers of the most recent changes (tips of the DAG)</li>
+            <li><strong>Changes:</strong> Binary-encoded change data representing all document operations</li>
+            <li><strong>Download Snapshot:</strong> Export the current document as a .am file</li>
+            <li>Automerge uses a DAG (Directed Acyclic Graph) to track history</li>
+            <li>Each change builds on previous changes, creating a version history</li>
+            <li>Concurrent edits create multiple heads, which are merged automatically</li>
+        </ul>
+        <h3>API Endpoints:</h3>
+        <code>GET /api/heads</code> - Get current heads<br>
+        <code>GET /api/changes</code> - Get all changes<br>
+        <code>GET /api/doc</code> - Download .am snapshot
+    </div>
+</div>
+
+<style>
+.history-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.history-section h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+.section-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.heads-display, .changes-display {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg-primary);
+    border-radius: 8px;
+}
+
+.heads-count {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.head-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    border-left: 3px solid var(--success-color);
+}
+
+.head-index {
+    font-weight: bold;
+    color: var(--success-color);
+    min-width: 30px;
+}
+
+.head-hash {
+    flex: 1;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.changes-info {
+    font-size: 0.95rem;
+}
+
+.info-row {
+    margin: 0.75rem 0;
+}
+
+.changes-preview {
+    margin-top: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+.changes-preview code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    word-break: break-all;
+}
+</style>

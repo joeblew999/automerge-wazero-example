@@ -1,0 +1,61 @@
+<!-- M0: Map CRDT Component -->
+<div class="component-container">
+    <h2>Map CRDT</h2>
+    <p class="description">
+        Key-value map with CRDT semantics. Each key holds a single value,
+        with last-write-wins conflict resolution.
+    </p>
+
+    <div class="editor-section">
+        <div class="form-group">
+            <label for="map-path">Path:</label>
+            <input type="text" id="map-path" class="input-field" placeholder="ROOT" value="ROOT">
+        </div>
+
+        <div class="form-group">
+            <label for="map-key">Key:</label>
+            <input type="text" id="map-key" class="input-field" placeholder="Enter key name">
+        </div>
+
+        <div class="form-group">
+            <label for="map-value">Value:</label>
+            <input type="text" id="map-value" class="input-field" placeholder="Enter value">
+        </div>
+
+        <div class="controls">
+            <button id="map-put" class="btn btn-primary">➕ Put</button>
+            <button id="map-get" class="btn btn-secondary">🔍 Get</button>
+            <button id="map-delete" class="btn btn-danger">🗑️ Delete</button>
+            <button id="map-list-keys" class="btn btn-secondary">📋 Refresh Keys</button>
+            <button id="map-clear-all" class="btn btn-danger">🧹 Clear All</button>
+        </div>
+
+        <div class="info-bar">
+            <span id="map-status" class="status-text"></span>
+        </div>
+    </div>
+
+    <div class="keys-section">
+        <h3>Keys in Map:</h3>
+        <div id="map-keys" class="keys-list">
+            <div class="empty-message">No keys yet</div>
+        </div>
+    </div>
+
+    <div class="help-section">
+        <h3>How it works:</h3>
+        <ul>
+            <li><strong>Put:</strong> Store a key-value pair in the map</li>
+            <li><strong>Get:</strong> Retrieve the value for a key</li>
+            <li><strong>Delete:</strong> Remove a key from the map</li>
+            <li><strong>List Keys:</strong> Show all keys in the current map</li>
+            <li>Multiple clients can modify the same map simultaneously</li>
+            <li>Last write wins for conflicting updates</li>
+        </ul>
+        <h3>API Endpoints:</h3>
+        <code>GET /api/map?path=ROOT&key=name</code> - Get value<br>
+        <code>POST /api/map</code> - Put key/value<br>
+        <code>DELETE /api/map?path=ROOT&key=name</code> - Delete key<br>
+        <code>GET /api/map/keys?path=ROOT</code> - List all keys
+    </div>
+</div>

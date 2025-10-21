@@ -3,6 +3,11 @@
 // 1:1 mapping: coordinates all web/js/*.js modules
 
 import { TextComponent } from './text.js';
+import { MapComponent } from './map.js';
+import { ListComponent } from './list.js';
+import { CounterComponent } from './counter.js';
+import { CursorComponent } from './cursor.js';
+import { HistoryComponent } from './history.js';
 import { SyncComponent } from './sync.js';
 import { RichTextComponent } from './richtext.js';
 
@@ -10,6 +15,11 @@ class App {
     constructor() {
         this.components = {
             text: new TextComponent(),
+            map: new MapComponent(),
+            list: new ListComponent(),
+            counter: new CounterComponent(),
+            cursor: new CursorComponent(),
+            history: new HistoryComponent(),
             sync: new SyncComponent(),
             richtext: new RichTextComponent(),
         };

@@ -1,0 +1,61 @@
+<!-- M0: List CRDT Component -->
+<div class="component-container">
+    <h2>List CRDT</h2>
+    <p class="description">
+        Ordered list with CRDT semantics. Items can be inserted, appended, or deleted.
+        Concurrent operations are automatically reconciled.
+    </p>
+
+    <div class="editor-section">
+        <div class="form-group">
+            <label for="list-path">Path:</label>
+            <input type="text" id="list-path" class="input-field" placeholder="ROOT.items" value="ROOT.items">
+        </div>
+
+        <div class="form-group">
+            <label for="list-value">Value:</label>
+            <input type="text" id="list-value" class="input-field" placeholder="Enter value to add">
+        </div>
+
+        <div class="form-group">
+            <label for="list-index">Index (for insert):</label>
+            <input type="number" id="list-index" class="input-field" placeholder="0" min="0">
+        </div>
+
+        <div class="controls">
+            <button id="list-push" class="btn btn-primary">➕ Push (append)</button>
+            <button id="list-insert" class="btn btn-secondary">⬇️ Insert at Index</button>
+            <button id="list-refresh" class="btn btn-secondary">🔄 Refresh</button>
+            <button id="list-clear-all" class="btn btn-danger">🧹 Clear All</button>
+        </div>
+
+        <div class="info-bar">
+            <span>Length: <strong id="list-length">0</strong></span>
+            <span id="list-status" class="status-text"></span>
+        </div>
+    </div>
+
+    <div class="items-section">
+        <h3>List Items:</h3>
+        <div id="list-items" class="list-items">
+            <div class="empty-message">Empty list</div>
+        </div>
+    </div>
+
+    <div class="help-section">
+        <h3>How it works:</h3>
+        <ul>
+            <li><strong>Push:</strong> Append value to the end of the list</li>
+            <li><strong>Insert:</strong> Insert value at specific index</li>
+            <li><strong>Delete:</strong> Remove item at index (click Delete button)</li>
+            <li>List maintains order and handles concurrent edits</li>
+            <li>Multiple clients can modify the same list simultaneously</li>
+        </ul>
+        <h3>API Endpoints:</h3>
+        <code>POST /api/list/push</code> - Append to list<br>
+        <code>POST /api/list/insert</code> - Insert at index<br>
+        <code>GET /api/list?path=ROOT.items&index=0</code> - Get item<br>
+        <code>DELETE /api/list?path=ROOT.items&index=0</code> - Delete item<br>
+        <code>GET /api/list/len?path=ROOT.items</code> - Get length
+    </div>
+</div>

@@ -22,7 +22,8 @@ func main() {
 	ctx := context.Background()
 
 	// Configuration from environment
-	storageDir := getEnv("STORAGE_DIR", "../../../")
+	// Paths are relative to go/ directory when running: cd go && go run cmd/server/main.go
+	storageDir := getEnv("STORAGE_DIR", "..")
 	port := getEnv("PORT", "8080")
 	userID := getEnv("USER_ID", "default")
 
@@ -38,7 +39,7 @@ func main() {
 
 	// Static file configuration
 	staticCfg := api.StaticConfig{
-		WebPath: "../../../web", // Web folder (index.html, css/, js/, components/, vendor/)
+		WebPath: "../web", // Web folder (index.html, css/, js/, components/, vendor/)
 	}
 
 	// Setup HTTP routes
@@ -87,7 +88,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// Serve web/index.html for root path
 		if r.URL.Path == "/" {
-			http.ServeFile(w, r, "../../../web/index.html")
+			http.ServeFile(w, r, "../web/index.html")
 		} else {
 			http.NotFound(w, r)
 		}

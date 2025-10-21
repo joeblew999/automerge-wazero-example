@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automerge WASI Demo - Complete Feature Demo</title>
+    <title>Automerge WASI Demo - Complete CRDT Showcase</title>
     <link rel="stylesheet" href="/web/css/main.css">
 </head>
 <body>
@@ -26,25 +26,28 @@
         <!-- Tab Navigation -->
         <nav class="tab-nav">
             <button class="tab-btn active" data-tab="text">
-                📝 M0: Text CRDT
+                📝 Text
             </button>
             <button class="tab-btn" data-tab="map">
-                🗺️ M0: Map
+                🗺️ Map
             </button>
             <button class="tab-btn" data-tab="list">
-                📋 M0: List
+                📋 List
             </button>
             <button class="tab-btn" data-tab="counter">
-                🔢 M0: Counter
+                🔢 Counter
             </button>
-            <button class="tab-btn" data-tab="sync">
-                🔄 M1: Sync
-            </button>
-            <button class="tab-btn" data-tab="richtext">
-                ✨ M2: RichText
+            <button class="tab-btn" data-tab="cursor">
+                🎯 Cursor
             </button>
             <button class="tab-btn" data-tab="history">
-                📚 M0: History
+                📚 History
+            </button>
+            <button class="tab-btn" data-tab="sync">
+                🔄 Sync (M1)
+            </button>
+            <button class="tab-btn" data-tab="richtext">
+                ✨ RichText (M2)
             </button>
         </nav>
 
@@ -52,255 +55,94 @@
         <main class="tab-content">
             <!-- M0: Text CRDT -->
             <div id="tab-text" class="tab-pane active">
-                <h2>Text CRDT Editing</h2>
-                <p class="description">
-                    Server-side Automerge Text CRDT with real-time SSE broadcasting.
-                    All clients share the same document state.
-                </p>
-
-                <div class="editor-section">
-                    <textarea id="text-editor" placeholder="Start typing... Changes are synced via SSE"></textarea>
-                    <div class="controls">
-                        <button id="text-save" class="btn btn-primary">Save Changes</button>
-                        <button id="text-clear" class="btn btn-secondary">Clear</button>
-                        <button id="text-load" class="btn btn-secondary">Reload</button>
-                    </div>
-                    <div class="info-bar">
-                        <span>Characters: <strong id="text-char-count">0</strong></span>
-                        <span id="text-status"></span>
-                    </div>
-                </div>
+                <div id="component-text"></div>
             </div>
 
             <!-- M0: Map -->
             <div id="tab-map" class="tab-pane">
-                <h2>Map Operations</h2>
-                <p class="description">
-                    Key-value storage with CRDT conflict resolution.
-                    PUT, GET, DELETE, and KEYS operations.
-                </p>
-
-                <div class="form-section">
-                    <h3>Add/Update Key-Value</h3>
-                    <div class="form-row">
-                        <input type="text" id="map-key" placeholder="Key" />
-                        <input type="text" id="map-value" placeholder="Value" />
-                        <button id="map-put" class="btn btn-primary">PUT</button>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>Get Value</h3>
-                    <div class="form-row">
-                        <input type="text" id="map-get-key" placeholder="Key" />
-                        <button id="map-get" class="btn btn-primary">GET</button>
-                        <span id="map-get-result" class="result"></span>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>Delete Key</h3>
-                    <div class="form-row">
-                        <input type="text" id="map-delete-key" placeholder="Key" />
-                        <button id="map-delete" class="btn btn-danger">DELETE</button>
-                    </div>
-                </div>
-
-                <div class="data-display">
-                    <h3>All Keys</h3>
-                    <button id="map-keys" class="btn btn-secondary">Refresh Keys</button>
-                    <div id="map-keys-display" class="code-block"></div>
-                </div>
+                <div id="component-map"></div>
             </div>
 
             <!-- M0: List -->
             <div id="tab-list" class="tab-pane">
-                <h2>List Operations</h2>
-                <p class="description">
-                    CRDT List with PUSH, INSERT, GET, DELETE operations.
-                    Each item has a unique position maintained by the CRDT.
-                </p>
-
-                <div class="form-section">
-                    <h3>Push Item</h3>
-                    <div class="form-row">
-                        <input type="text" id="list-push-value" placeholder="Value" />
-                        <button id="list-push" class="btn btn-primary">PUSH</button>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>Insert at Index</h3>
-                    <div class="form-row">
-                        <input type="number" id="list-insert-index" placeholder="Index" min="0" />
-                        <input type="text" id="list-insert-value" placeholder="Value" />
-                        <button id="list-insert" class="btn btn-primary">INSERT</button>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>Delete by Index</h3>
-                    <div class="form-row">
-                        <input type="number" id="list-delete-index" placeholder="Index" min="0" />
-                        <button id="list-delete" class="btn btn-danger">DELETE</button>
-                    </div>
-                </div>
-
-                <div class="data-display">
-                    <h3>List Contents</h3>
-                    <button id="list-refresh" class="btn btn-secondary">Refresh</button>
-                    <div id="list-display" class="code-block"></div>
-                </div>
+                <div id="component-list"></div>
             </div>
 
             <!-- M0: Counter -->
             <div id="tab-counter" class="tab-pane">
-                <h2>Counter Operations</h2>
-                <p class="description">
-                    CRDT Counter with increment/decrement operations.
-                    Concurrent increments automatically merge.
-                </p>
+                <div id="component-counter"></div>
+            </div>
 
-                <div class="counter-display">
-                    <div class="counter-value" id="counter-value">0</div>
-                    <div class="counter-controls">
-                        <button id="counter-decrement" class="btn btn-large btn-secondary">− Decrement</button>
-                        <button id="counter-increment" class="btn btn-large btn-primary">+ Increment</button>
-                    </div>
-                    <div class="counter-form">
-                        <input type="number" id="counter-delta" placeholder="Delta" value="1" />
-                        <button id="counter-add" class="btn btn-primary">Add Custom</button>
-                    </div>
-                    <button id="counter-refresh" class="btn btn-secondary">Refresh Value</button>
-                </div>
+            <!-- Cursor Operations -->
+            <div id="tab-cursor" class="tab-pane">
+                <div id="component-cursor"></div>
+            </div>
+
+            <!-- History -->
+            <div id="tab-history" class="tab-pane">
+                <div id="component-history"></div>
             </div>
 
             <!-- M1: Sync -->
             <div id="tab-sync" class="tab-pane">
-                <h2>Sync Protocol (M1)</h2>
-                <p class="description">
-                    Automerge sync protocol for efficient delta-based synchronization.
-                    Each peer maintains sync state and exchanges binary messages.
-                </p>
-
-                <div class="sync-demo">
-                    <div class="form-section">
-                        <h3>Peer Information</h3>
-                        <div class="form-row">
-                            <input type="text" id="sync-peer-id" placeholder="Peer ID (e.g., peer-1)" value="browser-peer" />
-                            <button id="sync-init" class="btn btn-primary">Initialize Sync</button>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Send Sync Message</h3>
-                        <p class="help-text">
-                            Generate and send a sync message to the server.
-                            The server will respond with its own sync message if needed.
-                        </p>
-                        <button id="sync-send" class="btn btn-primary">Send Sync Message</button>
-                        <div id="sync-response" class="code-block"></div>
-                    </div>
-
-                    <div class="data-display">
-                        <h3>Sync Log</h3>
-                        <div id="sync-log" class="log-display"></div>
-                    </div>
-                </div>
+                <div id="component-sync"></div>
             </div>
 
             <!-- M2: RichText -->
             <div id="tab-richtext" class="tab-pane">
-                <h2>Rich Text Marks (M2)</h2>
-                <p class="description">
-                    Text formatting with CRDT-aware marks (bold, italic, underline).
-                    Marks are associated with character positions and merge correctly.
-                </p>
-
-                <div class="richtext-demo">
-                    <div class="editor-section">
-                        <textarea id="richtext-editor" placeholder="Type text to format...">Hello World! This is a test.</textarea>
-                        <div class="info-bar">
-                            <span>Selection: <strong id="richtext-selection">None</strong></span>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Apply Mark</h3>
-                        <div class="form-row">
-                            <select id="mark-name">
-                                <option value="bold">Bold</option>
-                                <option value="italic">Italic</option>
-                                <option value="underline">Underline</option>
-                                <option value="highlight">Highlight</option>
-                            </select>
-                            <input type="number" id="mark-start" placeholder="Start" value="0" />
-                            <input type="number" id="mark-end" placeholder="End" value="5" />
-                            <button id="mark-apply" class="btn btn-primary">Apply Mark</button>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Remove Mark</h3>
-                        <div class="form-row">
-                            <select id="unmark-name">
-                                <option value="bold">Bold</option>
-                                <option value="italic">Italic</option>
-                                <option value="underline">Underline</option>
-                                <option value="highlight">Highlight</option>
-                            </select>
-                            <input type="number" id="unmark-start" placeholder="Start" value="0" />
-                            <input type="number" id="unmark-end" placeholder="End" value="5" />
-                            <button id="unmark-apply" class="btn btn-danger">Remove Mark</button>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Get Marks at Position</h3>
-                        <div class="form-row">
-                            <input type="number" id="marks-pos" placeholder="Position" value="0" />
-                            <button id="marks-get" class="btn btn-primary">Get Marks</button>
-                        </div>
-                        <div id="marks-display" class="code-block"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- M0: History -->
-            <div id="tab-history" class="tab-pane">
-                <h2>Document History</h2>
-                <p class="description">
-                    View document heads and changes.
-                    Each change has a unique hash and tracks the document's evolution.
-                </p>
-
-                <div class="data-display">
-                    <h3>Current Heads</h3>
-                    <button id="history-heads" class="btn btn-secondary">Get Heads</button>
-                    <div id="heads-display" class="code-block"></div>
-                </div>
-
-                <div class="data-display">
-                    <h3>All Changes</h3>
-                    <button id="history-changes" class="btn btn-secondary">Get Changes</button>
-                    <div id="changes-display" class="code-block"></div>
-                </div>
+                <div id="component-richtext"></div>
             </div>
         </main>
 
         <!-- Footer -->
         <footer class="app-footer">
             <p>
-                Built with ❤️ using Rust (WASI) + Go (wazero) |
-                <a href="https://github.com/joeblew999/automerge-wazero-example" target="_blank">GitHub</a>
+                Automerge WASI Example |
+                <a href="https://github.com/joeblew999/automerge-wazero-example" target="_blank">GitHub</a> |
+                Perfect 1:1 mapping: Rust WASI ↔ Go FFI ↔ Go API ↔ Go Server ↔ HTTP ↔ Web Components
             </p>
         </footer>
     </div>
 
-    <!-- Load Automerge.js (built from source at .src/automerge/) -->
+    <!-- Load Automerge.js (built from source) -->
     <script src="/vendor/automerge.js"></script>
 
-    <!-- Load JS modules -->
-    <script type="module" src="/web/js/app.js"></script>
+    <!-- Load App (ES6 modules) -->
+    <script type="module">
+        // Load component HTML files dynamically
+        async function loadComponent(name) {
+            try {
+                const response = await fetch(`/web/components/${name}.html`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${name} component`);
+                }
+                const html = await response.text();
+                const container = document.getElementById(`component-${name}`);
+                if (container) {
+                    container.innerHTML = html;
+                }
+            } catch (error) {
+                console.error(`Error loading ${name} component:`, error);
+            }
+        }
+
+        // Load all components
+        Promise.all([
+            loadComponent('text'),
+            loadComponent('map'),
+            loadComponent('list'),
+            loadComponent('counter'),
+            loadComponent('cursor'),
+            loadComponent('history'),
+            loadComponent('sync'),
+            loadComponent('richtext'),
+        ]).then(() => {
+            console.log('✅ All components loaded');
+            // Now load the main app
+            import('/web/js/app.js');
+        }).catch(error => {
+            console.error('Error loading components:', error);
+        });
+    </script>
 </body>
 </html>
