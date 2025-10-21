@@ -1,6 +1,6 @@
 # Layer Marker Templates
 
-Templates for adding layer markers to files across the 6-layer architecture.
+Templates for adding layer markers to files across the 7-layer architecture.
 
 ## Layer 2: Rust WASI Exports
 
@@ -134,6 +134,77 @@ Templates for adding layer markers to files across the 6-layer architecture.
 // ═══════════════════════════════════════════════════════════════
 ```
 
+## Layer 7: Web Frontend (JavaScript)
+
+```javascript
+// ═══════════════════════════════════════════════════════════════
+// LAYER 7: Web Frontend (JavaScript Client)
+//
+// Responsibilities:
+// - Handle user interactions for <Module> CRDT
+// - Call HTTP API endpoints (Layer 6)
+// - Update DOM based on SSE events
+// - Manage client-side state (peer ID, connection status, etc)
+//
+// Dependencies:
+// ⬇️  Calls: /api/<module> (Layer 6 - HTTP API)
+//           SSE: /api/stream (server events)
+// ⬆️  Called by: web/js/app.js (orchestrator)
+//
+// Related Files:
+// 🔁 Component: web/components/<module>.html (UI template)
+// 🔁 Backend: go/pkg/api/<module>.go (Layer 6)
+// 📝 Tests: tests/playwright/<module>_test_plan.md
+// 🔗 Docs: docs/explanation/architecture.md#layer-7-web
+//
+// Design Note:
+// This layer provides CRDT-specific UI logic. Infrastructure
+// concerns (tab switching, SSE setup, routing) live in app.js.
+// ═══════════════════════════════════════════════════════════════
+
+export class <Module>Component {
+    constructor() {
+        // Component state
+    }
+
+    init() {
+        // Setup event listeners
+    }
+
+    destroy() {
+        // Cleanup when switching tabs
+    }
+}
+```
+
+## Layer 7: Web Frontend (HTML)
+
+```html
+<!--
+═══════════════════════════════════════════════════════════════
+LAYER 7: Web Frontend (HTML Template)
+
+Responsibilities:
+- UI template for <Module> CRDT operations
+- Form inputs, buttons, display areas
+- Loaded by web/js/app.js into main DOM
+
+Related Files:
+🔁 Logic: web/js/<module>.js (component class)
+🔁 Backend: go/pkg/api/<module>.go (Layer 6)
+🔗 Docs: docs/explanation/architecture.md#layer-7-web
+
+Design Note:
+This is a pure HTML fragment loaded via fetch().
+No inline JavaScript - all logic in web/js/<module>.js
+═══════════════════════════════════════════════════════════════
+-->
+
+<div class="<module>-container">
+    <!-- UI elements here -->
+</div>
+```
+
 ## Usage
 
 1. Copy the appropriate template for your layer
@@ -160,6 +231,6 @@ import "context"
 
 ## See Also
 
-- [Architecture Guide](../explanation/architecture.md) - Understanding the 6-layer design
+- [Architecture Guide](../explanation/architecture.md) - Understanding the 7-layer design
 - [AI Readability Guide](../explanation/ai-readability-improvements.md) - Why layer markers matter
 - [CLAUDE.md Section 0.3.1](../../CLAUDE.md#031-ai-code-connection-strategy) - AI navigation strategy

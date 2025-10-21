@@ -1,5 +1,27 @@
-// M0: Text CRDT Module
-// Maps to: go/pkg/automerge/text.go, go/pkg/api/text.go
+// ═══════════════════════════════════════════════════════════════
+// LAYER 7: Web Frontend (JavaScript Client)
+//
+// Responsibilities:
+// - Handle user interactions for Text CRDT
+// - Call HTTP API endpoints (Layer 6)
+// - Update DOM based on SSE events
+// - Manage client-side state (editor content, char count, status)
+//
+// Dependencies:
+// ⬇️  Calls: /api/text (Layer 6 - HTTP API)
+//           SSE: /api/stream (server events)
+// ⬆️  Called by: web/js/app.js (orchestrator)
+//
+// Related Files:
+// 🔁 Component: web/components/text.html (UI template)
+// 🔁 Backend: go/pkg/api/handlers.go (Layer 6)
+// 📝 Tests: tests/playwright/M0_TEXT_TEST_PLAN.md
+// 🔗 Docs: docs/explanation/architecture.md#layer-7-web
+//
+// Design Note:
+// This layer provides CRDT-specific UI logic. Infrastructure
+// concerns (tab switching, SSE setup, routing) live in app.js.
+// ═══════════════════════════════════════════════════════════════
 
 export class TextComponent {
     constructor() {

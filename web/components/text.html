@@ -1,4 +1,23 @@
-<!-- M0: Text CRDT Component -->
+<!--
+═══════════════════════════════════════════════════════════════
+LAYER 7: Web Frontend (HTML Template)
+
+Responsibilities:
+- UI template for Text CRDT operations
+- Form inputs, buttons, display areas (textarea, save/clear/reload buttons)
+- Loaded by web/js/app.js into main DOM
+
+Related Files:
+🔁 Logic: web/js/text.js (TextComponent class)
+🔁 Backend: go/pkg/api/handlers.go (Layer 6)
+🔗 Docs: docs/explanation/architecture.md#layer-7-web
+
+Design Note:
+This is a pure HTML fragment loaded via fetch().
+No inline JavaScript - all logic in web/js/text.js
+═══════════════════════════════════════════════════════════════
+-->
+
 <div class="component-container">
     <h2>Text CRDT Editing</h2>
     <p class="description">

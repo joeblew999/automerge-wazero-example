@@ -62,7 +62,7 @@ Always use **`joeblew999`** (3 nines), not `joeblew99` (2 nines).
 
 ## 0.2) 🔥 CODE SYNCHRONIZATION REQUIREMENTS
 
-**CRITICAL**: 6-layer architecture - ALL layers must stay synchronized!
+**CRITICAL**: 7-layer architecture - ALL layers must stay synchronized!
 
 ```
 Layer 1: Automerge Rust Core (.src/automerge/)
@@ -76,24 +76,26 @@ Layer 4: Go High-Level API (go/pkg/automerge/<module>.go - Pure CRDT)
 Layer 5: Go Server Layer (go/pkg/server/<module>.go - Stateful + Thread-safe)
            ↓
 Layer 6: Go HTTP API (go/pkg/api/<module>.go - HTTP handlers)
+           ↓
+Layer 7: Web Frontend (web/js/<module>.js + web/components/<module>.html)
 ```
 
 ### 🎯 Perfect 1:1 File Mapping Across ALL Layers ✅
 
 **Core CRDT Modules (10/10)**:
 
-| Rust Module | Go FFI | Go API | Go Server | Go HTTP | Purpose |
-|-------------|--------|--------|-----------|---------|---------|
-| state.rs | state.go | - | server.go | - | Global state |
-| memory.rs | memory.go | - | - | - | Memory allocation |
-| document.rs | document.go | document.go | document.go | - | Lifecycle/Save/Load |
-| text.rs | text.go | text.go | text.go | text.go | Text CRDT |
-| map.rs | map.go | map.go | map.go | map.go | Map CRDT |
-| list.rs | list.go | list.go | list.go | list.go | List CRDT |
-| counter.rs | counter.go | counter.go | counter.go | counter.go | Counter CRDT |
-| history.rs | history.go | history.go | history.go | history.go | Version control |
-| sync.rs | sync.go | sync.go | sync.go | sync.go | Sync protocol (M1) |
-| richtext.rs | richtext.go | richtext.go | richtext.go | richtext.go | Rich text (M2) |
+| Rust Module | Go FFI | Go API | Go Server | Go HTTP | Web JS | Web HTML | Purpose |
+|-------------|--------|--------|-----------|---------|--------|----------|---------|
+| state.rs | state.go | - | server.go | - | - | - | Global state |
+| memory.rs | memory.go | - | - | - | - | - | Memory allocation |
+| document.rs | document.go | document.go | document.go | - | - | - | Lifecycle/Save/Load |
+| text.rs | text.go | text.go | text.go | text.go | text.js | text.html | Text CRDT |
+| map.rs | map.go | map.go | map.go | map.go | map.js | map.html | Map CRDT |
+| list.rs | list.go | list.go | list.go | list.go | list.js | list.html | List CRDT |
+| counter.rs | counter.go | counter.go | counter.go | counter.go | counter.js | counter.html | Counter CRDT |
+| history.rs | history.go | history.go | history.go | history.go | history.js | history.html | Version control |
+| sync.rs | sync.go | sync.go | sync.go | sync.go | sync.js | sync.html | Sync protocol (M1) |
+| richtext.rs | richtext.go | richtext.go | richtext.go | richtext.go | richtext.js | richtext.html | Rich text (M2) |
 
 **Infrastructure Files (NOT in 1:1 mapping)**:
 
@@ -101,13 +103,17 @@ These files are **exceptions** to the 1:1 rule - they provide infrastructure, no
 
 | File | Purpose | Why No 1:1 Mapping |
 |------|---------|-------------------|
-| **Layer 5 (Server)** | | |
-| server/server.go | Server struct, constructor, lifecycle | Container for state, not CRDT operation |
-| server/broadcast.go | SSE client management | Server infrastructure, not CRDT logic |
+| **Layer 7 (Web Frontend)** | | |
+| web/js/app.js | Tab orchestration, SSE setup | Application bootstrap, not CRDT logic |
+| web/css/main.css | Shared styles (600+ lines) | UI styling, not CRDT logic |
+| web/index.html | Main entry point with tabs | Application shell, not CRDT logic |
 | **Layer 6 (HTTP API)** | | |
 | api/handlers.go | Legacy text handler | Early prototype (has layer marker) |
 | api/util.go | HTTP helpers (parsePathString) | HTTP protocol utility, not CRDT |
 | api/static.go | Static file serving | UI serving infrastructure |
+| **Layer 5 (Server)** | | |
+| server/server.go | Server struct, constructor, lifecycle | Container for state, not CRDT operation |
+| server/broadcast.go | SSE client management | Server infrastructure, not CRDT logic |
 | **Layer 4 (Automerge)** | | |
 | automerge/doc.go | Package documentation | Go convention |
 | automerge/errors.go | Error definitions | Cross-cutting concern |
@@ -133,6 +139,13 @@ These files are **exceptions** to the 1:1 rule - they provide infrastructure, no
 - Calls server methods
 - Formats HTTP responses (JSON, status codes)
 - Example: `func MapHandler(srv *server.Server) http.HandlerFunc`
+
+**Layer 7 (web/)**: Web Frontend
+- **JavaScript modules** (`web/js/<module>.js`): CRDT-specific client logic
+- **HTML components** (`web/components/<module>.html`): UI templates
+- Calls HTTP API (Layer 6) via fetch/SSE
+- Updates DOM based on user input and server events
+- Example: `class SyncComponent { async initSync() { ... } }`
 
 ### Why Separate Layers 5 & 6?
 
