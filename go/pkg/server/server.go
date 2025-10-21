@@ -18,12 +18,14 @@ type Server struct {
 	clients    []chan string
 	storageDir string
 	userID     string
+	wasmPath   string
 }
 
 // Config holds server configuration
 type Config struct {
 	StorageDir string
 	UserID     string
+	WASMPath   string
 }
 
 // New creates a new Server instance
@@ -32,6 +34,7 @@ func New(cfg Config) *Server {
 		clients:    make([]chan string, 0),
 		storageDir: cfg.StorageDir,
 		userID:     cfg.UserID,
+		wasmPath:   cfg.WASMPath,
 	}
 }
 
@@ -42,7 +45,7 @@ func (s *Server) Initialize(ctx context.Context) error {
 	// Try to load existing snapshot
 	if data, err := os.ReadFile(snapshotPath); err == nil {
 		log.Printf("[%s] Loading existing snapshot from %s...", s.userID, snapshotPath)
-		doc, err := automerge.Load(ctx, data)
+		doc, err := automerge.LoadWithWASM(ctx, data, s.wasmPath)
 		if err != nil {
 			return fmt.Errorf("failed to load document: %w", err)
 		}
@@ -52,7 +55,7 @@ func (s *Server) Initialize(ctx context.Context) error {
 
 	// Initialize new document
 	log.Printf("[%s] Initializing new document...", s.userID)
-	doc, err := automerge.New(ctx)
+	doc, err := automerge.NewWithWASM(ctx, s.wasmPath)
 	if err != nil {
 		return fmt.Errorf("failed to create document: %w", err)
 	}

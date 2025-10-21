@@ -50,6 +50,7 @@ func New(cfg config.Config) (*HTTPServer, error) {
 	srv := server.New(server.Config{
 		StorageDir: cfg.StorageDir,
 		UserID:     cfg.UserID,
+		WASMPath:   cfg.WASMPath,
 	})
 
 	if err := srv.Initialize(ctx); err != nil {

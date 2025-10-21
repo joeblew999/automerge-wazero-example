@@ -13,12 +13,6 @@ import (
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 )
 
-const (
-	// Default WASM module path (can be overridden)
-	// Relative to go/ directory when running: go run cmd/server/main.go
-	defaultWASMPath = "../rust/automerge_wasi/target/wasm32-wasip1/release/automerge_wasi.wasm"
-)
-
 // Runtime wraps the Wazero runtime and provides access to WASM exports
 type Runtime struct {
 	runtime wazero.Runtime
@@ -28,13 +22,13 @@ type Runtime struct {
 
 // Config for runtime initialization
 type Config struct {
-	WASMPath string // Path to .wasm file (optional, uses default if empty)
+	WASMPath string // Path to .wasm file (REQUIRED - no default)
 }
 
 // New creates a new Wazero runtime and loads the Automerge WASI module
 func New(ctx context.Context, cfg Config) (*Runtime, error) {
 	if cfg.WASMPath == "" {
-		cfg.WASMPath = defaultWASMPath
+		return nil, fmt.Errorf("WASMPath is required in wazero.Config")
 	}
 
 	// Create Wazero runtime

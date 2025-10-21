@@ -12,9 +12,15 @@ type Document struct {
 }
 
 // New creates a new empty Automerge document
+// Deprecated: Use NewWithWASM instead to explicitly specify WASM path
 func New(ctx context.Context) (*Document, error) {
+	return NewWithWASM(ctx, "")
+}
+
+// NewWithWASM creates a new empty Automerge document with explicit WASM path
+func NewWithWASM(ctx context.Context, wasmPath string) (*Document, error) {
 	// Create wazero runtime
-	runtime, err := wazero.New(ctx, wazero.Config{})
+	runtime, err := wazero.New(ctx, wazero.Config{WASMPath: wasmPath})
 	if err != nil {
 		return nil, err
 	}
@@ -29,9 +35,15 @@ func New(ctx context.Context) (*Document, error) {
 }
 
 // Load creates a document from a binary snapshot
+// Deprecated: Use LoadWithWASM instead to explicitly specify WASM path
 func Load(ctx context.Context, data []byte) (*Document, error) {
+	return LoadWithWASM(ctx, data, "")
+}
+
+// LoadWithWASM creates a document from a binary snapshot with explicit WASM path
+func LoadWithWASM(ctx context.Context, data []byte, wasmPath string) (*Document, error) {
 	// Create wazero runtime
-	runtime, err := wazero.New(ctx, wazero.Config{})
+	runtime, err := wazero.New(ctx, wazero.Config{WASMPath: wasmPath})
 	if err != nil {
 		return nil, err
 	}
