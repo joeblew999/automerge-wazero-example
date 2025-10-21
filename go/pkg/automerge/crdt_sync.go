@@ -1,3 +1,35 @@
+// ==============================================================================
+// Layer 4: Go High-Level CRDT API - Sync Protocol
+// ==============================================================================
+// ARCHITECTURE: This is the high-level Go API layer (Layer 4/7).
+//
+// RESPONSIBILITIES:
+// - Pure CRDT operations (stateless, no mutex, no persistence)
+// - Type-safe Go interface wrapping FFI calls
+// - Convenience methods combining multiple FFI calls
+// - Documentation of CRDT semantics
+//
+// DEPENDENCIES:
+// - Layer 3: pkg/wazero (FFI to WASM)
+// - Context: Takes context.Context for FFI calls
+// - Runtime: Uses *wazero.Runtime directly
+//
+// DEPENDENTS:
+// - Layer 5: pkg/server (stateful, thread-safe operations)
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 2: rust/automerge_wasi/src/sync.rs (WASI exports)
+// - Layer 3: pkg/wazero/crdt_sync.go (FFI wrappers)
+// - Layer 5: pkg/server/sync.go (stateful server operations)
+// - Layer 6: pkg/api/sync.go (HTTP handlers)
+// - Layer 7: web/js/sync.js + web/components/sync.html (frontend)
+//
+// NOTES:
+// - This layer is pure CRDT - no state, no mutex, no persistence
+// - All state management happens in Layer 5 (pkg/server)
+// - Sync is per-peer, not global (each peer has its own SyncState)
+// ==============================================================================
+
 package automerge
 
 import (

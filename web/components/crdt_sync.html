@@ -1,3 +1,33 @@
+<!--
+==============================================================================
+Layer 7: Web Frontend - Sync Protocol (HTML Template)
+==============================================================================
+ARCHITECTURE: This is the web frontend layer (Layer 7/7).
+
+RESPONSIBILITIES:
+- HTML structure for sync UI
+- Form inputs (peer ID, sync controls)
+- Status display areas (peer status, sync log)
+
+DEPENDENCIES:
+- Layer 7: web/js/crdt_sync.js (JavaScript module)
+- Layer 6: pkg/api/crdt_sync.go (HTTP handlers via JS)
+
+RELATED FILES (1:1 mapping):
+- Layer 2: rust/automerge_wasi/src/sync.rs (WASI exports)
+- Layer 3: pkg/wazero/crdt_sync.go (FFI wrappers)
+- Layer 4: pkg/automerge/crdt_sync.go (pure CRDT API)
+- Layer 5: pkg/server/crdt_sync.go (stateful server operations)
+- Layer 6: pkg/api/crdt_sync.go (HTTP handlers)
+- Layer 7: web/js/crdt_sync.js (JavaScript module)
+
+NOTES:
+- This template is loaded by web/index.html
+- All interactivity is handled by crdt_sync.js
+- Styling is in web/css/main.css
+==============================================================================
+-->
+
 <!-- M1: Sync Protocol Component -->
 <div class="component-container">
     <h2>🔄 Sync Protocol (M1)</h2>

@@ -1,3 +1,32 @@
+// ==============================================================================
+// Layer 7: Web Frontend - Sync Protocol (JavaScript Module)
+// ==============================================================================
+// ARCHITECTURE: This is the web frontend layer (Layer 7/7).
+//
+// RESPONSIBILITIES:
+// - User interaction (DOM events, form handling)
+// - HTTP API calls to Layer 6 (fetch /api/sync)
+// - UI updates (rendering sync status, log messages)
+// - State management (peer ID, sync state, log entries)
+//
+// DEPENDENCIES:
+// - Layer 6: pkg/api/crdt_sync.go (HTTP handlers)
+// - Browser APIs: fetch(), DOM
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 2: rust/automerge_wasi/src/sync.rs (WASI exports)
+// - Layer 3: pkg/wazero/crdt_sync.go (FFI wrappers)
+// - Layer 4: pkg/automerge/crdt_sync.go (pure CRDT API)
+// - Layer 5: pkg/server/crdt_sync.go (stateful server operations)
+// - Layer 6: pkg/api/crdt_sync.go (HTTP handlers)
+// - Layer 7: web/components/crdt_sync.html (HTML template)
+//
+// NOTES:
+// - This module exports a class that's instantiated by app.js
+// - All state is local to this component (not shared)
+// - HTTP calls use base64-encoded sync messages
+// ==============================================================================
+
 // M1: Sync Protocol Module
 // Maps to: go/pkg/automerge/sync.go, go/pkg/api/sync.go
 
