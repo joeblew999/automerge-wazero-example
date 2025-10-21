@@ -55,42 +55,42 @@
         <main class="tab-content">
             <!-- M0: Text CRDT -->
             <div id="tab-text" class="tab-pane active">
-                <div id="component-text"></div>
+                <div id="component-crdt_text"></div>
             </div>
 
             <!-- M0: Map -->
             <div id="tab-map" class="tab-pane">
-                <div id="component-map"></div>
+                <div id="component-crdt_map"></div>
             </div>
 
             <!-- M0: List -->
             <div id="tab-list" class="tab-pane">
-                <div id="component-list"></div>
+                <div id="component-crdt_list"></div>
             </div>
 
             <!-- M0: Counter -->
             <div id="tab-counter" class="tab-pane">
-                <div id="component-counter"></div>
+                <div id="component-crdt_counter"></div>
             </div>
 
             <!-- Cursor Operations -->
             <div id="tab-cursor" class="tab-pane">
-                <div id="component-cursor"></div>
+                <div id="component-crdt_cursor"></div>
             </div>
 
             <!-- History -->
             <div id="tab-history" class="tab-pane">
-                <div id="component-history"></div>
+                <div id="component-crdt_history"></div>
             </div>
 
             <!-- M1: Sync -->
             <div id="tab-sync" class="tab-pane">
-                <div id="component-sync"></div>
+                <div id="component-crdt_sync"></div>
             </div>
 
             <!-- M2: RichText -->
             <div id="tab-richtext" class="tab-pane">
-                <div id="component-richtext"></div>
+                <div id="component-crdt_richtext"></div>
             </div>
         </main>
 
@@ -128,14 +128,14 @@
 
         // Load all components
         Promise.all([
-            loadComponent('text'),
-            loadComponent('map'),
-            loadComponent('list'),
-            loadComponent('counter'),
-            loadComponent('cursor'),
-            loadComponent('history'),
-            loadComponent('sync'),
-            loadComponent('richtext'),
+            loadComponent('crdt_text'),
+            loadComponent('crdt_map'),
+            loadComponent('crdt_list'),
+            loadComponent('crdt_counter'),
+            loadComponent('crdt_cursor'),
+            loadComponent('crdt_history'),
+            loadComponent('crdt_sync'),
+            loadComponent('crdt_richtext'),
         ]).then(() => {
             console.log('✅ All components loaded');
             // Now load the main app

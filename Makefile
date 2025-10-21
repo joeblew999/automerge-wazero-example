@@ -28,8 +28,8 @@ VENDOR_JS = $(VENDOR_DIR)/automerge.js
 WEB_DIR = web
 WEB_HTML = $(WEB_DIR)/index.html
 WEB_CSS = $(WEB_DIR)/css/main.css
-WEB_JS = $(WEB_DIR)/js/app.js $(WEB_DIR)/js/text.js $(WEB_DIR)/js/sync.js $(WEB_DIR)/js/richtext.js
-WEB_COMPONENTS = $(WEB_DIR)/components/text.html $(WEB_DIR)/components/sync.html $(WEB_DIR)/components/richtext.html
+WEB_JS = $(WEB_DIR)/js/app.js $(WEB_DIR)/js/crdt_text.js $(WEB_DIR)/js/crdt_sync.js $(WEB_DIR)/js/crdt_richtext.js
+WEB_COMPONENTS = $(WEB_DIR)/components/crdt_text.html $(WEB_DIR)/components/crdt_sync.html $(WEB_DIR)/components/crdt_richtext.html
 
 ## help: Show this help message
 help:

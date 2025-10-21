@@ -2,14 +2,14 @@
 // Handles tab switching and component lifecycle
 // 1:1 mapping: coordinates all web/js/*.js modules
 
-import { TextComponent } from './text.js';
-import { MapComponent } from './map.js';
-import { ListComponent } from './list.js';
-import { CounterComponent } from './counter.js';
-import { CursorComponent } from './cursor.js';
-import { HistoryComponent } from './history.js';
-import { SyncComponent } from './sync.js';
-import { RichTextComponent } from './richtext.js';
+import { TextComponent } from './crdt_text.js';
+import { MapComponent } from './crdt_map.js';
+import { ListComponent } from './crdt_list.js';
+import { CounterComponent } from './crdt_counter.js';
+import { CursorComponent } from './crdt_cursor.js';
+import { HistoryComponent } from './crdt_history.js';
+import { SyncComponent } from './crdt_sync.js';
+import { RichTextComponent } from './crdt_richtext.js';
 
 class App {
     constructor() {
