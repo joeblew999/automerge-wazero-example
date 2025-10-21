@@ -1,11 +1,29 @@
+// ═══════════════════════════════════════════════════════════════
+// LAYER 3: Go FFI Wrappers (wazero → WASM)
+//
+// Responsibilities:
+// - Call WASM functions via wazero runtime
+// - Marshal Go strings/data to WASM linear memory
+// - Translate WASM error codes to Go errors
+// - Manage WASM memory allocation/deallocation
+//
+// Dependencies:
+// ⬇️  Calls: WASM functions (am_sync_*)
+//           Implemented in: rust/automerge_wasi/src/sync.rs (Layer 2)
+// ⬆️  Called by: go/pkg/automerge/crdt_sync.go (Layer 4 - high-level API)
+//
+// Related Files:
+// 🔁 Siblings: crdt_text.go, crdt_map.go, crdt_list.go, crdt_counter.go, crdt_richtext.go
+// 📝 Tests: crdt_sync_test.go (FFI boundary tests)
+// 🔗 Docs: docs/explanation/architecture.md#layer-3-go-ffi
+// ═══════════════════════════════════════════════════════════════
+
 package wazero
 
 import (
 	"context"
 	"fmt"
 )
-
-// Sync Protocol - maps to rust/automerge_wasi/src/sync.rs
 
 // AmSyncStateInit creates a new sync state for a peer connection
 // Returns peer_id (> 0) on success, or 0 on error

@@ -1,8 +1,25 @@
-// WASI exports for Automerge sync protocol operations
+// ═══════════════════════════════════════════════════════════════
+// LAYER 2: Rust WASI Exports (C-ABI for FFI)
 //
-// The sync protocol enables efficient delta-based synchronization between peers.
-// Instead of sending the entire document, peers exchange only the changes they
-// don't have yet.
+// Responsibilities:
+// - Export C-ABI functions callable from Go via wazero
+// - Implement Automerge sync protocol (delta-based peer synchronization)
+// - Manage per-peer sync state (HashMap<peer_id, sync::State>)
+// - Return error codes as i32 (0 = success, <0 = error)
+//
+// Dependencies:
+// ⬇️  Calls: automerge crate (Layer 1 - CRDT core, sync::State)
+// ⬆️  Called by: go/pkg/wazero/crdt_sync.go (Layer 3 - Go FFI wrappers)
+//
+// Related Files:
+// 🔁 Siblings: map.rs, list.rs, counter.rs, text.rs, richtext.rs
+// 📝 Tests: cargo test (Rust unit tests)
+// 🔗 Docs: docs/explanation/architecture.md#layer-2-rust-wasi
+//
+// Design Note:
+// Sync state is PER-PEER, not global. Each peer connection gets its own
+// sync::State tracked by peer_id. This is required by Automerge protocol.
+// ═══════════════════════════════════════════════════════════════
 
 use crate::state::with_doc_mut;
 use automerge::sync::{self, SyncDoc};
