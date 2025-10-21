@@ -232,6 +232,110 @@ make verify-docs && git add docs/ *.md && git commit
 
 ---
 
+## 0.3.1) 🤖 AI-CODE CONNECTION STRATEGY
+
+**WHY THIS MATTERS**: This codebase is designed to be navigable by AI agents. The patterns below ensure AI can understand context, avoid mistakes, and refactor safely.
+
+**Key Document**: [AI Readability Improvements](docs/explanation/ai-readability-improvements.md) - Complete analysis and implementation plan
+
+### Core Principles
+
+**1. Every File Knows Its Place**
+- **Layer markers** at top of each file show which of 6 layers it belongs to
+- Shows dependencies (⬇️ calls, ⬆️ called by, 🔁 siblings)
+- Points to related tests and documentation
+
+**Why**: AI instantly understands context without reading entire codebase
+
+**2. FFI Boundary Has Safety Contracts**
+- All 57 WASM exports document memory ownership, encoding, error codes
+- Shows typical call sequence from Go side
+- Prevents memory bugs and use-after-free errors
+
+**Why**: The Rust↔Go FFI boundary is where most bugs happen. Explicit contracts prevent AI from introducing memory safety issues.
+
+**3. Magic Numbers Are Banned**
+- Error codes use named constants (`ErrCode::InvalidUTF8` not `-1`)
+- Shared between Rust and Go via code generation
+- Every code has human-readable message
+
+**Why**: AI can't guess what `-2` means. Named constants are self-documenting.
+
+**4. Surprising Code Gets "Why" Comments**
+- Intentional designs that look "wrong" are explained
+- Architectural decisions documented in `docs/decisions/`
+- Prevents AI from "fixing" deliberate choices
+
+**Why**: AI will try to "fix" code that looks unusual. Explain the rationale to prevent this.
+
+**5. Documentation Is Code**
+- Auto-generated from actual code structure (not manually maintained)
+- Verification scripts ensure standards are maintained
+- `make verify-ai-readability` catches violations
+
+**Why**: Manual docs drift from reality. Generated docs are always accurate.
+
+### Current Implementation Status
+
+**Implemented**:
+- ✅ 1:1 file mapping documented (Section 0.2)
+- ✅ FFI exports have parameter/return documentation
+- ✅ Documentation structure (Section 0.3)
+- ✅ Analysis document created
+
+**In Progress** (See [AI Readability Improvements](docs/explanation/ai-readability-improvements.md)):
+- 🚧 Layer markers (0/77 files have them)
+- 🚧 Error code enum (still using magic numbers)
+- 🚧 FFI safety contracts (partial coverage)
+- 🚧 Decision logs (docs/decisions/ not created yet)
+- 🚧 "Why" comments (0 currently)
+
+### Quick Navigation for AI Agents
+
+**"I need to understand a file's purpose"**
+→ Read the layer marker at the top
+
+**"I need to understand an error code"**
+→ Check `rust/automerge_wasi/src/errors.rs` (when implemented)
+
+**"Why does this code look weird?"**
+→ Check `docs/decisions/` for architectural decisions
+
+**"I need to modify the FFI boundary"**
+→ Read the FFI SAFETY CONTRACT in the function comment
+
+**"I need to add a new module"**
+→ Follow the 1:1 mapping: create files in all 6 layers (Section 0.2)
+
+### Verification
+
+```bash
+# Check AI-readability standards are maintained
+make verify-ai-readability
+
+# Checks:
+# - Every file has layer marker
+# - No magic number returns
+# - All WASM exports have FFI docs
+# - Error codes use named constants
+```
+
+### For AI Agents: When to Update This Section
+
+**Update CLAUDE.md Section 0.3.1 when**:
+- New AI-readability pattern is established
+- Verification scripts are added/changed
+- Implementation status changes significantly
+
+**Update [docs/explanation/ai-readability-improvements.md](docs/explanation/ai-readability-improvements.md) when**:
+- Adding detailed examples of improvements
+- Changing the phased implementation plan
+- Documenting before/after metrics
+
+**The Rule**: CLAUDE.md = **what** and **why**. Detailed docs = **how** and **examples**.
+
+---
+
 ## 0.4) Testing Requirements & Strategy
 
 **NEVER ASSUME CODE WORKS!** All code MUST be tested.
