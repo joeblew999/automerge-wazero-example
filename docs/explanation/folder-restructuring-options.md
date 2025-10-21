@@ -1,11 +1,11 @@
 # Folder Restructuring Options - Separating Infrastructure from 1:1 Mapping
 
 **Date Created**: 2025-10-21
-**Status**: ⚠️ **ATTEMPTED & ROLLED BACK** - Option 1 doesn't work with Go's package system
+**Status**: ✅ **IMPLEMENTED** - Option 3 (crdt_ naming convention)
 
 **Goal**: Physically separate infrastructure files from CRDT operation files to make the 1:1 mapping crystal clear.
 
-**Current Problem**: Files like `server/server.go`, `api/util.go` live alongside CRDT files, making the structure less obvious.
+**Solution**: Renamed all CRDT operation files with `crdt_` prefix (49 files total - 33 Go + 16 web).
 
 ---
 
@@ -286,25 +286,31 @@ go/pkg/
 
 ---
 
-## My Recommendation: **Option 3 (Naming Convention)** ⭐ UPDATED
+## ✅ IMPLEMENTED: **Option 3 (Naming Convention)**
 
-**Why Option 1 is crossed out**:
+**Implementation Date**: 2025-10-21
+**Commit**: `784f101` - "feat: implement Option 3 - crdt_ naming convention (49 files renamed)"
+
+**What was done**:
+- ✅ Renamed 49 files with `crdt_` prefix (33 Go + 16 web)
+- ✅ Updated web/js/app.js imports
+- ✅ Updated web/index.html component loading
+- ✅ Updated Makefile variables
+- ✅ All tests pass, server runs correctly
+
+**Results**:
+- ✅ **Grep-able**: `ls **/crdt_*.go` shows all CRDT files
+- ✅ **Visual clarity**: CRDT vs infrastructure immediately obvious
+- ✅ **Mobile-friendly**: Clean separation for gomobile
+- ✅ **Self-documenting**: File names indicate CRDT operations
+- ✅ **No import changes**: Go imports by package, not filename
+
+**Why Option 1 failed**:
 - ❌ **Doesn't work with Go's package system** (discovered during implementation)
 - ❌ Subdirectories must be separate packages
 - ❌ Creates circular dependency issues
 
-**Why Option 3 is now best**:
-- ✅ **Works immediately** (no import changes needed)
-- ✅ **Grep-able**: `ls **/crdt_*.go` shows all 1:1 files
-- ✅ **Mobile-friendly**: Still physically separates concerns for gomobile
-- ✅ **Quick to implement**: 1-2 hours (just renames)
-
-**When to do it**:
-- **Now**: If you want visual separation without import hell
-- **Later**: When preparing for mobile deployment
-- **Never**: If Option 4 (status quo + docs) works fine
-
-**Alternative**: **Option 4 (Status Quo)** if you're happy with current CLAUDE.md documentation
+See [Option 3 Rename Plan](option3-rename-plan.md) for complete implementation details.
 
 ---
 

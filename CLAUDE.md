@@ -121,6 +121,38 @@ These files are **exceptions** to the 1:1 rule - they provide infrastructure, no
 
 **Rule of Thumb**: If a file implements a **CRDT operation** (text, map, list, counter, sync, richtext, cursor, history, generic), it follows 1:1 mapping. If it's **infrastructure** (server setup, HTTP routing, error types), it doesn't need to.
 
+### 🏷️ Naming Convention: crdt_ Prefix
+
+**All CRDT operation files use `crdt_` prefix for visual separation**:
+
+```
+go/pkg/wazero/crdt_text.go          # CRDT operation
+go/pkg/wazero/document.go            # Infrastructure
+
+go/pkg/automerge/crdt_map.go         # CRDT operation
+go/pkg/automerge/errors.go           # Infrastructure
+
+go/pkg/server/crdt_sync.go           # CRDT operation
+go/pkg/server/server.go              # Infrastructure
+
+go/pkg/api/crdt_richtext.go          # CRDT operation
+go/pkg/api/util.go                   # Infrastructure
+
+web/js/crdt_text.js                  # CRDT operation
+web/js/app.js                        # Infrastructure
+
+web/components/crdt_sync.html        # CRDT operation
+web/index.html                       # Infrastructure
+```
+
+**Benefits**:
+- ✅ **Grep-able**: `ls **/crdt_*.go` shows all CRDT files
+- ✅ **Visual clarity**: CRDT vs infrastructure immediately obvious
+- ✅ **Mobile-friendly**: Useful for gomobile code organization
+- ✅ **Self-documenting**: File names indicate CRDT operations
+
+See [Option 3 Rename Plan](docs/explanation/option3-rename-plan.md) for complete details.
+
 ### Layer Responsibilities
 
 **Layer 4 (pkg/automerge)**: Pure CRDT operations
@@ -173,11 +205,11 @@ This separation enables **protocol flexibility** - we could add gRPC handlers or
 
 **Example Flow**:
 ```
-1. Add method: go/pkg/automerge/map.go → func (d *Document) Put(...)
+1. Add method: go/pkg/automerge/crdt_map.go → func (d *Document) Put(...)
 2. Add export: rust/automerge_wasi/src/map.rs → am_put(...)
-3. Add wrapper: go/pkg/wazero/map.go → func (r *Runtime) AmPut(...)
+3. Add wrapper: go/pkg/wazero/crdt_map.go → func (r *Runtime) AmPut(...)
 4. Update docs: docs/reference/api-mapping.md → document the mapping
-5. Add test: go/pkg/automerge/map_test.go → TestDocument_Put
+5. Add test: go/pkg/automerge/crdt_map_test.go → TestDocument_Put
 ```
 
 ### When You Change Rust Code → Update Go
