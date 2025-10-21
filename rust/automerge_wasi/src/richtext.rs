@@ -1,3 +1,34 @@
+// ==============================================================================
+// Layer 2: Rust WASI Exports - Rich Text (Marks & Formatting)
+// ==============================================================================
+// ARCHITECTURE: This is the WASI export layer (Layer 2/7).
+//
+// RESPONSIBILITIES:
+// - WASI-compatible function exports (C ABI)
+// - Memory management (reading/writing linear memory)
+// - UTF-8 string marshaling
+// - Error code translation (Rust Result → i32)
+//
+// DEPENDENCIES:
+// - Layer 1: automerge crate (CRDT core)
+// - crate::state (global document state)
+//
+// DEPENDENTS:
+// - Layer 3: pkg/wazero/crdt_richtext.go (FFI wrappers)
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 3: pkg/wazero/crdt_richtext.go (Go FFI wrappers)
+// - Layer 4: pkg/automerge/crdt_richtext.go (Go high-level API)
+// - Layer 5: pkg/server/crdt_richtext.go (stateful server)
+// - Layer 6: pkg/api/crdt_richtext.go (HTTP handlers)
+// - Layer 7: web/js/crdt_richtext.js + web/components/crdt_richtext.html
+//
+// NOTES:
+// - All exports use #[no_mangle] and extern "C"
+// - Marks are CRDT-aware (concurrent formatting merges correctly)
+// - Return 0 on success, negative error codes on failure
+// ==============================================================================
+
 // WASI exports for Automerge rich text operations (Marks and Spans)
 //
 // Marks allow you to add formatting (bold, italic, links, etc.) to text ranges.

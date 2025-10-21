@@ -1,3 +1,33 @@
+<!--
+==============================================================================
+Layer 7: Web Frontend - Rich Text (HTML Template)
+==============================================================================
+ARCHITECTURE: This is the web frontend layer (Layer 7/7).
+
+RESPONSIBILITIES:
+- HTML structure for rich text UI
+- Form inputs (text area, mark buttons)
+- Display area for formatted text with marks
+
+DEPENDENCIES:
+- Layer 7: web/js/crdt_richtext.js (JavaScript module)
+- Layer 6: pkg/api/crdt_richtext.go (HTTP handlers via JS)
+
+RELATED FILES (1:1 mapping):
+- Layer 2: rust/automerge_wasi/src/richtext.rs (WASI exports)
+- Layer 3: pkg/wazero/crdt_richtext.go (FFI wrappers)
+- Layer 4: pkg/automerge/crdt_richtext.go (pure CRDT API)
+- Layer 5: pkg/server/crdt_richtext.go (stateful server operations)
+- Layer 6: pkg/api/crdt_richtext.go (HTTP handlers)
+- Layer 7: web/js/crdt_richtext.js (JavaScript module)
+
+NOTES:
+- This template is loaded by web/index.html
+- All interactivity is handled by crdt_richtext.js
+- Styling is in web/css/main.css
+==============================================================================
+-->
+
 <!-- M2: RichText Marks Component -->
 <div class="component-container">
     <h2>✨ Rich Text Marks (M2)</h2>

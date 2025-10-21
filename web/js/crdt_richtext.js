@@ -1,3 +1,32 @@
+// ==============================================================================
+// Layer 7: Web Frontend - Rich Text (JavaScript Module)
+// ==============================================================================
+// ARCHITECTURE: This is the web frontend layer (Layer 7/7).
+//
+// RESPONSIBILITIES:
+// - User interaction (DOM events, mark buttons, text selection)
+// - HTTP API calls to Layer 6 (fetch /api/richtext/mark)
+// - UI updates (rendering formatted text with marks)
+// - State management (current text, applied marks)
+//
+// DEPENDENCIES:
+// - Layer 6: pkg/api/crdt_richtext.go (HTTP handlers)
+// - Browser APIs: fetch(), DOM, Selection API
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 2: rust/automerge_wasi/src/richtext.rs (WASI exports)
+// - Layer 3: pkg/wazero/crdt_richtext.go (FFI wrappers)
+// - Layer 4: pkg/automerge/crdt_richtext.go (pure CRDT API)
+// - Layer 5: pkg/server/crdt_richtext.go (stateful server operations)
+// - Layer 6: pkg/api/crdt_richtext.go (HTTP handlers)
+// - Layer 7: web/components/crdt_richtext.html (HTML template)
+//
+// NOTES:
+// - This module exports a class that's instantiated by app.js
+// - Handles text selection and applies marks to selected ranges
+// - Marks are CRDT-aware (concurrent formatting merges correctly)
+// ==============================================================================
+
 // M2: RichText Marks Module
 // Maps to: go/pkg/automerge/richtext.go, go/pkg/api/richtext.go
 

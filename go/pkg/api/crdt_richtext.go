@@ -1,3 +1,33 @@
+// ==============================================================================
+// Layer 6: HTTP API - Rich Text (Marks & Formatting)
+// ==============================================================================
+// ARCHITECTURE: This is the HTTP protocol layer (Layer 6/7).
+//
+// RESPONSIBILITIES:
+// - HTTP request parsing (JSON body, query params, headers)
+// - HTTP response formatting (JSON, status codes, headers)
+// - Input validation (HTTP-level)
+// - Protocol translation (HTTP ↔ Go function calls)
+//
+// DEPENDENCIES:
+// - Layer 5: pkg/server (business logic, state management)
+//
+// DEPENDENTS:
+// - None (top of backend stack)
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 2: rust/automerge_wasi/src/richtext.rs (WASI exports)
+// - Layer 3: pkg/wazero/crdt_richtext.go (FFI wrappers)
+// - Layer 4: pkg/automerge/crdt_richtext.go (pure CRDT API)
+// - Layer 5: pkg/server/crdt_richtext.go (stateful server operations)
+// - Layer 7: web/js/crdt_richtext.js + web/components/crdt_richtext.html
+//
+// NOTES:
+// - This layer is stateless (doesn't own any application state)
+// - All state management is delegated to Layer 5 (pkg/server)
+// - Handles HTTP protocol concerns (status codes, content-type, etc.)
+// ==============================================================================
+
 package api
 
 import (

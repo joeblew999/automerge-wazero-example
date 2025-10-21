@@ -1,3 +1,33 @@
+// ==============================================================================
+// Layer 5: Go Server - Rich Text (Stateful + Thread-safe)
+// ==============================================================================
+// ARCHITECTURE: This is the stateful server layer (Layer 5/7).
+//
+// RESPONSIBILITIES:
+// - Thread-safe CRDT operations (mutex protection)
+// - State management (owns *automerge.Document, sync.RWMutex)
+// - Persistence (saveDocument after mutations)
+// - SSE broadcasting to connected clients
+//
+// DEPENDENCIES:
+// - Layer 4: pkg/automerge (pure CRDT operations)
+//
+// DEPENDENTS:
+// - Layer 6: pkg/api (HTTP handlers)
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 2: rust/automerge_wasi/src/richtext.rs (WASI exports)
+// - Layer 3: pkg/wazero/crdt_richtext.go (FFI wrappers)
+// - Layer 4: pkg/automerge/crdt_richtext.go (pure CRDT API)
+// - Layer 6: pkg/api/crdt_richtext.go (HTTP handlers)
+// - Layer 7: web/js/crdt_richtext.js + web/components/crdt_richtext.html
+//
+// NOTES:
+// - All public methods are thread-safe (use s.mu.Lock/RLock)
+// - This layer delegates to Layer 4 for actual CRDT operations
+// - Broadcasts updates to SSE clients after mutations
+// ==============================================================================
+
 package server
 
 import (

@@ -1,3 +1,35 @@
+// ==============================================================================
+// Layer 4: Go High-Level CRDT API - Rich Text (Marks & Formatting)
+// ==============================================================================
+// ARCHITECTURE: This is the high-level Go API layer (Layer 4/7).
+//
+// RESPONSIBILITIES:
+// - Pure CRDT operations (stateless, no mutex, no persistence)
+// - Type-safe Go interface wrapping FFI calls
+// - Convenience methods combining multiple FFI calls
+// - Documentation of CRDT semantics
+//
+// DEPENDENCIES:
+// - Layer 3: pkg/wazero (FFI to WASM)
+// - Context: Takes context.Context for FFI calls
+// - Runtime: Uses *wazero.Runtime directly
+//
+// DEPENDENTS:
+// - Layer 5: pkg/server (stateful, thread-safe operations)
+//
+// RELATED FILES (1:1 mapping):
+// - Layer 2: rust/automerge_wasi/src/richtext.rs (WASI exports)
+// - Layer 3: pkg/wazero/crdt_richtext.go (FFI wrappers)
+// - Layer 5: pkg/server/crdt_richtext.go (stateful server operations)
+// - Layer 6: pkg/api/crdt_richtext.go (HTTP handlers)
+// - Layer 7: web/js/crdt_richtext.js + web/components/crdt_richtext.html
+//
+// NOTES:
+// - This layer is pure CRDT - no state, no mutex, no persistence
+// - All state management happens in Layer 5 (pkg/server)
+// - Marks are CRDT-aware (concurrent formatting merges correctly)
+// ==============================================================================
+
 package automerge
 
 import (
@@ -6,7 +38,7 @@ import (
 	"fmt"
 )
 
-// Rich Text Operations - M4 Milestone
+// Rich Text Operations - M2 Milestone
 //
 // Marks allow you to add formatting (bold, italic, links, etc.) to text
 // ranges. Marks are CRDT-aware and merge correctly when users concurrently
