@@ -898,6 +898,45 @@ See **[API Mapping](docs/reference/api-mapping.md)** for complete API coverage.
 
 ## 4) HTTP API (Demo)
 
+### Health Check Endpoints (Kubernetes-compatible)
+
+**Production-ready health endpoints** for orchestrators, load balancers, and monitoring:
+
+- `GET /health` - Combined health check (liveness + readiness)
+- `GET /healthz` - Liveness probe (is process alive?)
+- `GET /healthz/live` - Liveness probe (alternative path)
+- `GET /readyz` - Readiness probe (can accept traffic?)
+- `GET /healthz/ready` - Readiness probe (alternative path)
+
+**Example response**:
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-10-21T07:57:20Z",
+  "service": "automerge-wazero",
+  "details": {
+    "check": "readiness",
+    "document_initialized": true,
+    "wasm_runtime": "loaded",
+    "storage_dir": "..",
+    "user_id": "default"
+  }
+}
+```
+
+**Status codes**:
+- `200 OK` - Service is healthy
+- `503 Service Unavailable` - Service not ready (document initializing, WASM loading, etc.)
+- `405 Method Not Allowed` - Only GET requests allowed
+
+**Use cases**:
+- **Kubernetes**: Configure `livenessProbe` and `readinessProbe`
+- **Docker Compose**: Use `healthcheck` directive
+- **Load Balancers**: Configure health check path `/health`
+- **Monitoring**: Prometheus, Datadog, etc. can scrape `/health`
+
+### Automerge API Endpoints
+
 **Current endpoints**:
 - `GET /` - Serve UI
 - `GET /api/text` - Get current text

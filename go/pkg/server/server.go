@@ -79,3 +79,34 @@ func (s *Server) Close(ctx context.Context) error {
 	}
 	return nil
 }
+
+// IsReady checks if the server is ready to accept traffic.
+//
+// Returns:
+//   - ready: true if the server is ready, false otherwise
+//   - details: map with detailed status information
+//
+// This is used by readiness probes (Kubernetes, load balancers, etc.)
+func (s *Server) IsReady() (bool, map[string]interface{}) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	details := map[string]interface{}{
+		"check":   "readiness",
+		"user_id": s.userID,
+	}
+
+	// Check if document is initialized
+	if s.doc == nil {
+		details["document_initialized"] = false
+		details["wasm_runtime"] = "not_loaded"
+		return false, details
+	}
+
+	// Document exists = WASM runtime is loaded
+	details["document_initialized"] = true
+	details["wasm_runtime"] = "loaded"
+	details["storage_dir"] = s.storageDir
+
+	return true, details
+}

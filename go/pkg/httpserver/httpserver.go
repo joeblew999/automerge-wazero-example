@@ -72,6 +72,13 @@ func New(cfg config.Config) (*HTTPServer, error) {
 
 // setupRoutes configures all HTTP routes
 func (h *HTTPServer) setupRoutes() {
+	// Health check endpoints (Kubernetes-compatible)
+	h.mux.HandleFunc("/health", api.HealthHandler(h.server))           // Combined health check
+	h.mux.HandleFunc("/healthz", api.LivenessHandler(h.server))        // Liveness probe
+	h.mux.HandleFunc("/healthz/live", api.LivenessHandler(h.server))   // Liveness probe (alt)
+	h.mux.HandleFunc("/healthz/ready", api.ReadinessHandler(h.server)) // Readiness probe (alt)
+	h.mux.HandleFunc("/readyz", api.ReadinessHandler(h.server))        // Readiness probe
+
 	// M0 - Core Document & Text operations
 	h.mux.HandleFunc("/api/text", api.TextHandler(h.server))
 	h.mux.HandleFunc("/api/stream", api.StreamHandler(h.server))
