@@ -1,3 +1,28 @@
+// ═══════════════════════════════════════════════════════════════
+// LAYER 5: Go Server Layer (Stateful + Thread-Safe)
+//
+// Responsibilities:
+// - Own the Document instance and manage its lifecycle
+// - Add thread safety with mutex protection (s.mu.Lock/RLock)
+// - Add persistence (call saveDocument after mutations)
+// - Manage SSE broadcast to connected clients
+//
+// Dependencies:
+// ⬇️  Calls: go/pkg/automerge/text.go (Layer 4 - stateless CRDT API)
+// ⬆️  Called by: go/pkg/api/text.go (Layer 6 - HTTP handlers)
+//
+// Related Files:
+// 🔁 Siblings: map.go, list.go, counter.go, sync.go, richtext.go
+// 📝 Tests: text_test.go (concurrency + persistence tests)
+// 🔗 Docs: docs/explanation/architecture.md#layer-5-server
+//
+// Design Note:
+// This layer adds MUTATION side effects that Layer 4 doesn't have:
+// - Mutex locking (thread safety for concurrent HTTP requests)
+// - Disk writes (saveDocument after each mutation)
+// - SSE broadcasts (notify all connected clients)
+// ═══════════════════════════════════════════════════════════════
+
 package server
 
 import (

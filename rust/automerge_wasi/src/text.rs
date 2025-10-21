@@ -1,3 +1,22 @@
+// ═══════════════════════════════════════════════════════════════
+// LAYER 2: Rust WASI Exports (C-ABI for FFI)
+//
+// Responsibilities:
+// - Export C-ABI functions callable from Go via wazero
+// - Validate UTF-8 input from Go side
+// - Call Automerge Rust API for CRDT operations
+// - Return error codes as i32 (0 = success, <0 = error)
+//
+// Dependencies:
+// ⬇️  Calls: automerge crate (Layer 1 - CRDT core)
+// ⬆️  Called by: go/pkg/wazero/text.go (Layer 3 - Go FFI wrappers)
+//
+// Related Files:
+// 🔁 Siblings: map.rs, list.rs, counter.rs, sync.rs, richtext.rs
+// 📝 Tests: cargo test (Rust unit tests)
+// 🔗 Docs: docs/explanation/architecture.md#layer-2-rust-wasi
+// ═══════════════════════════════════════════════════════════════
+
 //! Text CRDT operations
 //!
 //! Provides splice, get, and length operations for Text objects.

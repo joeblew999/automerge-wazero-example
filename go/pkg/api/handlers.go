@@ -1,3 +1,28 @@
+// ═══════════════════════════════════════════════════════════════
+// LAYER 6: HTTP API Handlers (Protocol Layer)
+//
+// Responsibilities:
+// - Parse HTTP requests (JSON body, query params, headers)
+// - Call server layer methods (Layer 5)
+// - Format HTTP responses (JSON, status codes, headers)
+// - Handle HTTP-specific concerns (CORS, content-type, etc)
+//
+// Dependencies:
+// ⬇️  Calls: go/pkg/server/*.go (Layer 5 - stateful operations)
+// ⬆️  Called by: HTTP router in cmd/server/main.go
+//
+// Related Files:
+// 🔁 Siblings: map.go, list.go, counter.go, sync.go, richtext.go
+// 📝 Tests: *_test.go (HTTP integration tests)
+// 🔗 Docs: docs/explanation/architecture.md#layer-6-http-api
+//           docs/reference/http-api-complete.md
+//
+// Design Note:
+// This layer is STATELESS - it doesn't own any data.
+// All state management delegated to Layer 5 (server).
+// Multiple HTTP handlers can share the same server instance.
+// ═══════════════════════════════════════════════════════════════
+
 package api
 
 import (

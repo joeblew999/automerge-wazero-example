@@ -1,3 +1,26 @@
+// ═══════════════════════════════════════════════════════════════
+// LAYER 4: Go High-Level CRDT API (Pure Functions)
+//
+// Responsibilities:
+// - Provide idiomatic Go API for Automerge Text CRDT
+// - Pure CRDT operations (NO state, NO mutex, NO persistence)
+// - Path-based API for document navigation
+// - Error handling and validation
+//
+// Dependencies:
+// ⬇️  Calls: go/pkg/wazero/text.go (Layer 3 - FFI wrappers)
+// ⬆️  Called by: go/pkg/server/text.go (Layer 5 - adds state + thread safety)
+//
+// Related Files:
+// 🔁 Siblings: map.go, list.go, counter.go, sync.go, richtext.go
+// 📝 Tests: text_test.go (CRDT property tests)
+// 🔗 Docs: docs/explanation/architecture.md#layer-4-go-api
+//
+// Design Note:
+// This layer is STATELESS - it doesn't own the Document or manage
+// concurrency. Layer 5 (server) adds mutex protection and persistence.
+// ═══════════════════════════════════════════════════════════════
+
 package automerge
 
 import "context"

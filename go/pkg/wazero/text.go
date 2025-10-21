@@ -1,3 +1,23 @@
+// ═══════════════════════════════════════════════════════════════
+// LAYER 3: Go FFI Wrappers (wazero → WASM)
+//
+// Responsibilities:
+// - Call WASM functions via wazero runtime
+// - Marshal Go strings/data to WASM linear memory
+// - Translate WASM error codes to Go errors
+// - Manage WASM memory allocation/deallocation
+//
+// Dependencies:
+// ⬇️  Calls: WASM functions (am_text_splice, am_get_text, etc)
+//           Implemented in: rust/automerge_wasi/src/text.rs (Layer 2)
+// ⬆️  Called by: go/pkg/automerge/text.go (Layer 4 - high-level API)
+//
+// Related Files:
+// 🔁 Siblings: map.go, list.go, counter.go, sync.go, richtext.go
+// 📝 Tests: text_test.go (FFI boundary tests)
+// 🔗 Docs: docs/explanation/architecture.md#layer-3-go-ffi
+// ═══════════════════════════════════════════════════════════════
+
 package wazero
 
 import (
