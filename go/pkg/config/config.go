@@ -86,10 +86,36 @@ func NewFromEnv() Config {
 		Port:       getEnv("PORT", "8080"),
 		StorageDir: getEnv("STORAGE_DIR", "."),
 		UserID:     getEnv("USER_ID", "default"),
-		WASMPath:   getEnv("WASM_PATH", "../rust/automerge_wasi/target/wasm32-wasip1/release/automerge_wasi.wasm"),
+		WASMPath:   getEnv("WASM_PATH", getDefaultWASMPath()),
 		WebPath:    getEnv("WEB_PATH", "../web"),
 		EnableUI:   getEnvBool("ENABLE_UI", true),
 	}
+}
+
+// getDefaultWASMPath returns the default WASM path, checking multiple locations
+// Prefers debug build (faster iteration) if available, falls back to release
+func getDefaultWASMPath() string {
+	// Try different relative paths depending on where we're running from
+	candidates := []string{
+		// From go/cmd/server/ (when running: cd go && go run cmd/server/main.go)
+		"../../../rust/automerge_wasi/target/wasm32-wasip1/debug/automerge_wasi.wasm",
+		"../../../rust/automerge_wasi/target/wasm32-wasip1/release/automerge_wasi.wasm",
+		// From repo root (when running: go run go/cmd/server/main.go)
+		"rust/automerge_wasi/target/wasm32-wasip1/debug/automerge_wasi.wasm",
+		"rust/automerge_wasi/target/wasm32-wasip1/release/automerge_wasi.wasm",
+		// From go/ directory (legacy)
+		"../rust/automerge_wasi/target/wasm32-wasip1/debug/automerge_wasi.wasm",
+		"../rust/automerge_wasi/target/wasm32-wasip1/release/automerge_wasi.wasm",
+	}
+
+	for _, path := range candidates {
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+
+	// If nothing found, return the most common path (will fail later with clear error)
+	return "../rust/automerge_wasi/target/wasm32-wasip1/release/automerge_wasi.wasm"
 }
 
 // getEnv returns environment variable or default value
