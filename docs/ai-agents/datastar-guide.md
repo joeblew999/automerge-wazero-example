@@ -7,17 +7,34 @@
 
 ---
 
-## Summary: Best Way to Use Datastar
+## Summary: Datastar as Layer 7 (Separate UI Layer)
 
-**Recommended: Hybrid Co-existence (Option 2)**
+**Architecture Principle**: Datastar is a **separate UI layer**, not a refactoring.
 
-Keep current vanilla JS UI, add parallel `/datastar` route with Datastar version.
+**Recommended: Hybrid Co-existence**
 
-**Why?**
-✅ Zero risk - both UIs work  
-✅ Easy A/B comparison  
-✅ Learn Datastar incrementally  
-✅ Can migrate component-by-component
+Keep current vanilla JS UI (Layer 6), add Datastar UI (Layer 7) as parallel frontend.
+
+### Perfect 7-Layer Architecture
+
+```
+Layer 1: Rust WASI Exports    (rust/automerge_wasi/src/counter.rs)
+Layer 2: Go FFI Wrappers      (go/pkg/wazero/crdt_counter.go)
+Layer 3: Go CRDT API          (go/pkg/automerge/crdt_counter.go)
+Layer 4: Go Server            (go/pkg/server/crdt_counter.go)
+Layer 5: HTTP API             (go/pkg/api/crdt_counter.go)
+Layer 6: Vanilla JS UI        (web/js/crdt_counter.js) ← Current
+Layer 7: Datastar UI          (datastar/components/counter.html) ← NEW
+```
+
+**Key Point**: Layers 1-5 are **unchanged**. Same HTTP endpoints serve both UIs!
+
+**Why This is Best**:
+✅ Zero risk - both UIs work independently
+✅ Perfect layer separation maintained
+✅ Easy A/B comparison
+✅ Learn Datastar incrementally
+✅ Can remove Layer 7 without breaking anything
 
 **Key Insight**: Datastar reduces ~1500 lines of JS to ~400 lines of declarative HTML!
 
