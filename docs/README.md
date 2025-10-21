@@ -32,6 +32,7 @@ Recipes for solving specific problems. **Best for**: Accomplishing specific task
 Technical lookup and specifications. **Best for**: Looking up details, checking coverage.
 
 - [API Mapping](reference/api-mapping.md) - Automerge API → WASI → Go mapping matrix
+- [HTTP API Complete](reference/http-api-complete.md) - Full HTTP endpoint reference
 - [Automerge Comparison](reference/automerge-comparison.md) - JavaScript vs Rust API differences
 
 ### 💡 Explanation (Understanding-Oriented)
@@ -63,7 +64,9 @@ Historical documentation and completed milestone records.
 
 - [M0 Complete](archive/M0_COMPLETE.md) - Milestone 0 completion summary
 - [Cleanup Analysis](archive/cleanup-analysis.md) - Historical refactoring analysis
-- [Implementation Status 2025-10-20](archive/implementation-status-2025-10-20.md) - Point-in-time status snapshot
+- [Implementation Status 2025-10-20](archive/IMPLEMENTATION_STATUS.md) - Point-in-time status snapshot
+- [Quality Report](archive/QUALITY_REPORT.md) - Code quality analysis (2025-10-20)
+- [Session Summaries](archive/sessions/) - Detailed session-by-session logs
 
 ---
 
@@ -117,4 +120,4 @@ If you're an AI agent (Claude Code, etc.):
 
 ---
 
-**Last Updated**: 2025-10-20
+**Last Updated**: 2025-10-21

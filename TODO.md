@@ -16,7 +16,7 @@
 - ✅ **M1: Sync Protocol** - Per-peer sync state, message exchange, HTTP endpoints
 - ✅ **M2: Rich Text** - Mark/Unmark formatting, JSON serialization, position-based queries
 
-**📄 See [M1_M2_COMPLETE.md](M1_M2_COMPLETE.md) for full completion report.**
+**📄 See [M1_M2_COMPLETE.md](docs/archive/sessions/M1_M2_COMPLETE.md) for full completion report.**
 
 ---
 

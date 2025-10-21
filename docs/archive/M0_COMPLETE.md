@@ -250,7 +250,7 @@ $ hexdump -C go/cmd/server/data/alice/doc.am | head -2
    - No peer-to-peer sync
    - No conflict UI visualization
 
-See [TODO.md](TODO.md) Phases 3-10 for roadmap to production.
+See [TODO.md](../../TODO.md) Phases 3-10 for roadmap to production.
 
 ---
 
@@ -294,12 +294,12 @@ curl -X POST http://localhost:8081/api/merge --data-binary @alice.am
 
 | Document | Purpose | Lines |
 |----------|---------|-------|
-| [DEMO.md](DEMO.md) | Complete user guide | 500+ |
-| [README.md](README.md) | Quick start + overview | 160 |
-| [TODO.md](TODO.md) | 10-phase roadmap | 350+ |
-| [AGENT_AUTOMERGE.md](AGENT_AUTOMERGE.md) | AI knowledge base | 830+ |
-| [COMPLETE.md](COMPLETE.md) | This summary | 400+ |
-| [CLAUDE.md](CLAUDE.md) | Development guide | 100+ |
+| [getting-started.md](../tutorials/getting-started.md) | Complete user guide (was DEMO.md) | 500+ |
+| [README.md](../../README.md) | Quick start + overview | 160 |
+| [TODO.md](../../TODO.md) | 10-phase roadmap | 350+ |
+| [automerge-guide.md](../ai-agents/automerge-guide.md) | AI knowledge base (was AGENT_AUTOMERGE.md) | 830+ |
+| [M0_COMPLETE.md](./M0_COMPLETE.md) | This summary | 400+ |
+| [CLAUDE.md](../../CLAUDE.md) | Development guide | 100+ |
 
 **Total:** 2,340+ lines of documentation!
 
@@ -328,7 +328,7 @@ curl -X POST http://localhost:8081/api/merge --data-binary @alice.am
 6. **No Multi-User Auth** - Everyone edits same doc
 7. **No Persistence Layer** - Just filesystem storage
 
-See [TODO.md](TODO.md) for planned improvements.
+See [TODO.md](../../TODO.md) for planned improvements.
 
 ---
 

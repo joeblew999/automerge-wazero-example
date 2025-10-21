@@ -130,7 +130,7 @@ curl -X POST http://localhost:8080/api/counter -d '{"path":"ROOT","key":"clicks"
 curl "http://localhost:8080/api/counter?path=ROOT&key=clicks"
 ```
 
-**23 HTTP endpoints** total - see [HTTP API Complete Guide](HTTP_API_COMPLETE.md)
+**23 HTTP endpoints** total - see [HTTP API Complete Guide](docs/reference/http-api-complete.md)
 
 ---
 

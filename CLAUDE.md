@@ -22,7 +22,7 @@ This document provides **essential instructions** for AI agents. For detailed ex
 - ✅ Web UI with components for M0/M1/M2
 - ✅ Integration testing strategy across WASM boundary
 
-**See**: [SYSTEM_STATUS.md](SYSTEM_STATUS.md) for complete details
+**See**: [STATUS.md](STATUS.md) for complete details
 
 ---
 

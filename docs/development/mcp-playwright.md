@@ -341,4 +341,4 @@ npx playwright test --screenshot=on
 - CI/CD: Bash + Playwright scripts
 
 **See Also**:
-- [CLAUDE.md](../../CLAUDE.md#03-testing-requirements) - Testing requirements and MCP configuration
+- [CLAUDE.md](../../CLAUDE.md#04-testing-requirements) - Testing requirements and MCP configuration
