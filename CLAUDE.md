@@ -242,7 +242,7 @@ Browser (JS) → HTTP → Go Server → wazero → WASM (Rust Automerge)
 ```
 
 **Current (M0-M2)**: Centralized server (one Go instance, many browsers)
-**Target (M3+)**: Local-first (Go server per device, NATS sync)
+**Target (M4+)**: Local-first (Go server per device, NATS sync)
 
 **Key Points**:
 - We built **custom HTTP/JSON APIs** around Automerge (not using Automerge.js)
@@ -964,8 +964,8 @@ See **[Development Roadmap](docs/development/roadmap.md)** for complete details.
 
 ### Future: M2-M5
 - **M2**: Multi-object (Maps, Lists, Counters)
-- **M3**: NATS Transport
-- **M4**: Datastar UI (reactive frontend)
+- **M3**: Datastar UI (reactive frontend)
+- **M4**: NATS Transport (scalable pub/sub)
 - **M5**: Observability & Ops
 
 ---

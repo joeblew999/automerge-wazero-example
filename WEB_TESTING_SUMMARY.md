@@ -533,7 +533,7 @@ All major CRDT components (Text, Map, List, Counter, Cursor, History) work corre
 1. Create automated Playwright test suite (tests/playwright/)
 2. Document web architecture in docs/explanation/web-architecture.md
 3. Add integration tests for all CRUD operations
-4. Consider M3 (NATS Transport) or M4 (Datastar UI) milestones
+4. Consider M3 (Datastar UI - reactive frontend) or M4 (NATS Transport) milestones
 
 🎉 **WEB LAYER 100% COMPLETE!** 🎉
 
