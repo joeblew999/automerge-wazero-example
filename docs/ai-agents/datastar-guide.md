@@ -40,9 +40,13 @@ Layer 7: Datastar UI          (datastar/components/counter.html) ← NEW
 
 ---
 
-## Code Comparison: Before vs After
+## How Datastar Enhances Existing JavaScript
 
-### Before (Current): `web/js/crdt_counter.js` - 192 lines
+**Key Insight**: Datastar doesn't replace your JS - it adds reactive DOM updates!
+
+### JavaScript Layer (Stays the Same!)
+
+`web/js/crdt_counter.js` - **Used by both demos**:
 
 ```javascript
 class CounterComponent {
@@ -53,68 +57,112 @@ class CounterComponent {
     async getValue() {
         const res = await fetch('/api/counter?path=ROOT&key=counter');
         const data = await res.json();
-        // Manual DOM update
-        document.getElementById('counter-value').textContent = data.value;
+
+        // OLD WAY (web/components/counter.html):
+        // document.getElementById('counter-value').textContent = data.value;
+
+        // NEW WAY (datastar/components/counter.html):
+        // Just update the signal - Datastar auto-updates DOM!
+        if (window.dsStore) {
+            window.dsStore.counter = data.value;
+        } else {
+            document.getElementById('counter-value').textContent = data.value;
+        }
     }
 
-    async increment() {
-        await fetch('/api/counter', {
-            method: 'POST',
-            body: JSON.stringify({path: 'ROOT', key: 'counter', delta: 1})
-        });
-        await this.getValue(); // Manual refresh
-    }
-    
-    // ... 150 more lines of boilerplate
+    // ... rest of logic unchanged
 }
 ```
 
-### After (Datastar): `datastar/components/counter.html` - ~50 lines
+### HTML Layer (Two Versions)
 
+**Vanilla** (`web/components/counter.html`):
 ```html
-<div data-store='{"value": 0}' 
-     data-on-load="$$get('/ds/counter/init')">
-
-  <!-- Reactive - auto-updates! -->
-  <div data-text="$value"></div>
-
-  <!-- One-line action -->
-  <button data-on-click="$$post('/ds/counter/increment', {delta: 1})">
-    ➕ Increment
-  </button>
-
-  <!-- SSE auto-merges state -->
-  <div data-on-load="$$get('/ds/counter/stream')"></div>
+<div id="counter-component">
+    <div id="counter-value">0</div>
+    <button onclick="counterComponent.increment()">Increment</button>
 </div>
 ```
 
-**73% code reduction** + reactive + SSE built-in!
+**Datastar** (`datastar/components/counter.html`):
+```html
+<div id="counter-component" data-store='{"counter": 0}'>
+    <!-- Datastar watches signal, auto-renders -->
+    <div data-text="$counter"></div>
+
+    <!-- Same JS method, Datastar handles the rest! -->
+    <button onclick="counterComponent.increment()">Increment</button>
+</div>
+```
+
+**Benefit**: Minimal JS changes, massive UX improvement!
 
 ---
 
-## Recommended File Structure
+## Two Parallel Demos (Both Stay Permanently)
+
+### Purpose of Each Demo
+
+| Demo | Purpose | Use Case |
+|------|---------|----------|
+| **web/** | Testing & Validation | Playwright tests, CI/CD, debugging |
+| **datastar/** | Production Showcase | Demos, user-facing, better UX |
+
+### File Structure
 
 ```
-Current (keep):
-web/
-├── index.html
-├── js/crdt_*.js          # 8 files, ~1500 lines total
-└── components/*.html
+web/                      # SHARED JavaScript + Vanilla demo
+├── index.html            # Demo 1: Vanilla JS entry
+├── js/crdt_*.js         # 8 JS files - SHARED by both demos!
+│   ├── crdt_counter.js   # Used by web/ AND datastar/
+│   ├── crdt_text.js
+│   └── ...
+└── components/*.html     # Vanilla HTML (manual DOM updates)
 
-NEW (add for M3):
-datastar/
-├── index.html            # Datastar entry
+datastar/                 # Demo 2: Datastar (only HTML different!)
+├── index.html            # Datastar demo entry
 └── components/
-    ├── counter.html      # Datastar version
+    ├── counter.html      # Datastar-enhanced HTML (data-* attributes)
     ├── text.html
     └── ...
 ```
 
+**Smart Serving - No Symlinks!**
+
+Go server serves `/web/js/` to BOTH demos:
+
+```go
+// go/cmd/server/main.go
+http.Handle("/web/js/", http.StripPrefix("/web/js/",
+    http.FileServer(http.Dir("../web/js"))))  // Shared by both!
+
+http.HandleFunc("/", serveVanillaDemo)     // Loads web/index.html
+http.HandleFunc("/datastar", serveDatastarDemo)  // Loads datastar/index.html
+```
+
+**Both HTML files load the same JS**:
+```html
+<!-- web/index.html AND datastar/index.html -->
+<script src="/web/js/crdt_counter.js"></script>
+```
+
+**Key Insight**:
+- ✅ **Same JavaScript** served to both demos
+- ✅ **Different HTML** - Datastar adds reactive `data-*` attributes
+- ✅ **No duplication** - single source of truth for JS
+- ✅ **No symlinks** - just smart HTTP routes!
+
 **Routes**:
 ```
-http://localhost:8080/           → web/index.html (vanilla JS)
-http://localhost:8080/datastar   → datastar/index.html (Datastar)
+http://localhost:8080/           → web/index.html (testing/validation)
+http://localhost:8080/datastar   → datastar/index.html (production demo)
 ```
+
+**Why Keep Both?**:
+- ✅ Vanilla JS is valuable for **automated testing** (Playwright)
+- ✅ Vanilla JS is **reference implementation** (known-good)
+- ✅ Datastar is **better UX** for demos and users
+- ✅ Both use **same HTTP API** (Layers 1-5 unchanged!)
 
 ---
 
