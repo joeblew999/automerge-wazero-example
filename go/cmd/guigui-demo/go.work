@@ -1,0 +1,9 @@
+go 1.25.3
+
+// Workspace for guigui-demo
+// This isolates guigui dependencies from the main codebase
+
+use (
+	.   // Current directory (guigui-demo module)
+	../.. // Parent module at go/ (for pkg/automerge, pkg/wazero)
+)

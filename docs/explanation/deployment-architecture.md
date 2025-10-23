@@ -339,7 +339,7 @@ Each step builds on previous architecture.
 
 ## See Also
 
-- [Roadmap M3](../development/roadmap.md) - Detailed implementation tasks
+- [STATUS.md](../../STATUS.md) - M3 NATS Transport milestone
 - [Architecture](architecture.md) - Go package structure
 - [Testing Guide](../development/testing.md) - Multi-device test scenarios
 - [Automerge Guide](../ai-agents/automerge-guide.md) - CRDT concepts

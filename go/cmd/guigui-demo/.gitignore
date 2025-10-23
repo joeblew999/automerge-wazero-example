@@ -1,0 +1,15 @@
+# Workspace-specific files
+go.work.sum
+
+# Build artifacts
+guigui-demo
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Output of go coverage tool
+*.out

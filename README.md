@@ -188,7 +188,7 @@ All tests passing! See [Testing Guide](docs/development/testing.md)
 - **[Architecture](docs/explanation/architecture.md)** - Deep dive
 - **[API Reference](docs/reference/api-mapping.md)** - Complete API
 - **[Testing](docs/development/testing.md)** - Test guide
-- **[Roadmap](docs/development/roadmap.md)** - Future plans
+- **[STATUS](STATUS.md)** - Project status and future plans
 
 **[📚 Full Documentation Index →](docs/README.md)**
 

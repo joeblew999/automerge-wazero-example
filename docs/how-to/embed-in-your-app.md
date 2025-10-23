@@ -345,4 +345,4 @@ STORAGE_DIR=/tmp go run main.go
 
 - [Architecture Guide](../explanation/architecture.md) - Understanding the layers
 - [HTTP API Reference](../reference/http-api-complete.md) - Complete API docs
-- [Development Roadmap](../development/roadmap.md) - Future features
+- [Project Status](../../STATUS.md) - Current status and future plans

@@ -7,7 +7,7 @@ This directory contains all project documentation organized using the [Diátaxis
 - **[Getting Started](tutorials/getting-started.md)** - Start here if you're new
 - **[API Mapping](reference/api-mapping.md)** - Complete API coverage matrix
 - **[Architecture](explanation/architecture.md)** - Understand the 4-layer design
-- **[Roadmap](development/roadmap.md)** - Current status and future milestones
+- **[STATUS](../STATUS.md)** - Project status and future milestones
 
 ---
 
@@ -23,6 +23,7 @@ Step-by-step lessons for learning. **Best for**: First-time users, learning fund
 
 Recipes for solving specific problems. **Best for**: Accomplishing specific tasks.
 
+- [Build Automerge.js](how-to/build-automerge-js.md) - Building from source
 - [Add New WASI Export](how-to/) - Coming soon
 - [Debug WASM Issues](how-to/) - Coming soon
 - [Test with Playwright](development/mcp-playwright.md) - Playwright MCP testing guide
@@ -39,9 +40,10 @@ Technical lookup and specifications. **Best for**: Looking up details, checking 
 
 Conceptual understanding and design decisions. **Best for**: Understanding why things work the way they do.
 
-- [Architecture](explanation/architecture.md) - 4-layer architecture deep dive
+- [Architecture](explanation/architecture.md) - 7-layer architecture deep dive
+- [Web Architecture](explanation/web-architecture.md) - Web folder 1:1 mapping
 - [CRDT Basics](ai-agents/automerge-guide.md) - How Automerge CRDTs work
-- [Sync Protocol](explanation/) - Coming soon (M1)
+- [AI Readability](explanation/ai-readability-improvements.md) - Code patterns for AI agents
 
 ### 🔧 Development
 
@@ -49,7 +51,7 @@ Developer workflow, testing, and contributing.
 
 - [Testing Guide](development/testing.md) - Unit, integration, and E2E testing
 - [MCP Playwright](development/mcp-playwright.md) - Browser testing with Playwright MCP
-- [Roadmap](development/roadmap.md) - Implementation status and milestones
+- [Project Status](../STATUS.md) - Implementation status and future milestones
 
 ### 🤖 AI Agent Guides
 
@@ -77,7 +79,7 @@ Historical documentation and completed milestone records.
 - **...get started** → [Getting Started](tutorials/getting-started.md)
 - **...understand the architecture** → [Architecture](explanation/architecture.md)
 - **...add a new feature** → Check [API Mapping](reference/api-mapping.md), then see [CLAUDE.md](../CLAUDE.md) section 0.2
-- **...check implementation status** → [Roadmap](development/roadmap.md)
+- **...check implementation status** → [STATUS](../STATUS.md)
 - **...run tests** → [Testing Guide](development/testing.md)
 - **...understand CRDTs** → [Automerge Guide](ai-agents/automerge-guide.md)
 
