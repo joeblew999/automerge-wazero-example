@@ -2,7 +2,43 @@
 
 **Production-ready collaborative CRDT demo** powered by Automerge (Rust), WASI, and wazero (Go).
 
-This project demonstrates running [Automerge](https://automerge.org) - a mature CRDT library - compiled to WebAssembly (WASI) and hosted in a Go server using [wazero](https://wazero.io). Features a complete web UI showcasing **8 different CRDT types** with real-time collaboration via Server-Sent Events (SSE).
+## Why This Matters
+
+**Build truly collaborative apps without complex backend infrastructure.** This project solves the hardest problems in distributed systems:
+
+- **✅ No conflict resolution logic** - CRDTs mathematically guarantee consistency
+- **✅ Offline-first by default** - Work disconnected, sync seamlessly when reconnected
+- **✅ Local-first architecture** - Data stays on your device, no cloud dependency
+- **✅ Cross-platform from one codebase** - Desktop, mobile, and web from the same Go server
+- **✅ Real-time collaboration** - Like Google Docs, but you control the infrastructure
+
+**Perfect for:**
+- 📱 Mobile apps that need offline capability
+- 🎮 Real-time multiplayer experiences
+- 📝 Collaborative editing tools
+- 🏥 Healthcare/field apps with intermittent connectivity
+- 🔐 Privacy-focused apps where data stays local
+
+### How It Works: CRDTs Handle the Hard Part
+
+**Core Architecture:**
+- **CRDTs handle data merge** - Automerge automatically merges changes without conflicts
+- **Any transport works** - HTTP, WebSockets, Bluetooth, files on USB drives... it doesn't matter!
+- **Great with NATS** - Pair with [NATS](https://nats.io) for lightweight pub/sub signaling (separate project)
+
+```
+Device A makes changes ──> Automerge CRDT state
+                                │
+                                ├──> Share via ANY transport ──> Device B
+                                │    (NATS, HTTP, files, etc.)
+                                │
+                                └──> Automerge merges changes
+                                     ✅ Guaranteed consistency
+```
+
+**Why this matters:** Traditional sync needs complex operational transforms, vector clocks, or central coordination. CRDTs just need to exchange state - the math guarantees consistency regardless of network timing or failures. You could use HTTP polling, WebSockets, file sharing, or pair with [NATS](https://nats.io) for real-time pub/sub signaling. Each device runs its own local Go server with embedded CRDT state.
+
+**The Stack:** This project demonstrates running [Automerge](https://automerge.org) - a mature CRDT library - compiled to WebAssembly (WASI) and hosted in a Go server using [wazero](https://wazero.io). Features a complete web UI showcasing **8 different CRDT types** with real-time collaboration via Server-Sent Events (SSE).
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/go-1.21+-00ADD8?logo=go)](https://go.dev)
