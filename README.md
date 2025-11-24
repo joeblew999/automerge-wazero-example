@@ -258,6 +258,33 @@ make clean           # Clean artifacts
 - [Automerge](https://automerge.org) - CRDT library
 - [wazero](https://wazero.io) - Go WASM runtime
 - [WASI](https://wasi.dev) - WebAssembly System Interface
+- [NATS](https://nats.io) - Messaging system (great transport partner)
+
+---
+
+## 🤝 Collaboration
+
+This project is part of a larger local-first architecture combining:
+- **Automerge CRDTs** (this repo) - Conflict-free data layer
+- **NATS** - Lightweight messaging and sync signaling
+- **Datastar** - Reactive UI components
+- **[goup-util](https://github.com/joeblew999/goup-util)** - Cross-platform app bundling (iOS, Android, macOS, Windows, Linux)
+- **[wellknown](https://github.com/joeblew999/wellknown)** - Data sovereignty and platform-agnostic publishing
+
+**Complete Stack = Own Your Data, Reach Everyone:**
+- **Write once** → HTML/CSS/JS deploys to mobile, desktop, and web
+- **Own your data** → CRDTs sync locally, you control the infrastructure
+- **Publish optionally** → Use wellknown URIs to route to your apps or mirror to Google/Apple services
+- **Stay portable** → Your links work regardless of which platforms you use
+- ~95% web tech, ~4% Go backend, ~1% build commands
+
+**Looking for partners and organizations** interested in:
+- Building local-first applications
+- Offline-capable mobile/desktop solutions
+- Privacy-focused collaborative tools
+- Edge computing and distributed systems
+
+Open to collaboration, consulting, and commercial partnerships. Reach out via [GitHub Issues](https://github.com/joeblew999/automerge-wazero-example/issues) or explore the codebase to see if it fits your needs.
 
 ---
 
